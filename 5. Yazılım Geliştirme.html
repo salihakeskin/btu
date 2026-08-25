@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Kodlama ve Yazılım Geliştirme Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.4);
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            max-width: 900px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Nav Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Container */
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .module {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .module.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e2e8f0;
+        }
+
+        .instruction {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+
+        /* Interactive Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .code-box {
+            background: #090d16;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success { background: var(--accent-green); }
+        .btn-amber { background: var(--accent-amber); color: #000; }
+
+        .console {
+            background: #020617;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #a3e635;
+            min-height: 150px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Variables Lab */
+        .memory-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .slot {
+            background: #0f172a;
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .slot.filled {
+            border-style: solid;
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .slot-name {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .slot-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            color: #38bdf8;
+            margin: 0.5rem 0;
+        }
+
+        .slot-type {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            background: #334155;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Flowchart Node */
+        .flow-card {
+            background: #0f172a;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .flow-card.active-node {
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .flow-decision {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+        }
+
+        /* Loop visualizer */
+        .loop-track {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+        }
+
+        .loop-step {
+            min-width: 50px;
+            height: 50px;
+            background: #0f172a;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .loop-step.passed {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .loop-step.current {
+            background: var(--accent-amber);
+            border-color: var(--accent-amber);
+            color: black;
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ Programlama & Yazılım Laboratuvarı</h1>
+        <p>Bilgisayar Teknolojileri — 1. Sınıf İnteraktif Algoritma ve Kodlama İstasyonu</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('compiler')">⚙️ 1. Derleyici vs Yorumlayıcı</button>
+        <button class="tab-btn" onclick="switchTab('variables')">📦 2. Bellek & Değişkenler</button>
+        <button class="tab-btn" onclick="switchTab('flowchart')">🔀 3. Algoritma & Karar (if/else)</button>
+        <button class="tab-btn" onclick="switchTab('loops')">🔁 4. Döngü & Sayaç (For Loop)</button>
+    </div>
+
+    <div class="container">
+
+        <!-- MODÜL 1: Derleyici vs Yorumlayıcı -->
+        <div id="compiler" class="module active">
+            <h2>⚙️ Derleyici (Compiler) vs. Yorumlayıcı (Interpreter) Laboratuvarı</h2>
+            <div class="instruction">
+                <strong>Görev:</strong> Aşağıdaki C# (Derlenen) ve Python/JS (Yorumlanan) kodunu çalıştırın. Derleyicinin tüm kodu tek seferde makine diline çevirdiğini, yorumlayıcının ise satır satır ilerleyip hatanın olduğu satırda durduğunu gözlemleyin.
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <div class="code-box">
+<span style="color:#64748b">// Kaynak Kod (Program)</span>
+1: <span style="color:#f43f5e">int</span> a = 10;
+2: <span style="color:#f43f5e">int</span> b = 20;
+3: <span style="color:#a855f7">Console.WriteLine</span>(a + b);
+4: <span style="color:#f43f5e">int</span> c = "Hatalı Metin"; <span style="color:#ef4444">// TÜR HATASI!</span>
+5: <span style="color:#a855f7">Console.WriteLine</span>("Bitti");
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn" onclick="runCompiler()">🔨 Derleyici ile Derle (C#/C++)</button>
+                        <button class="btn btn-amber" onclick="runInterpreter()">⚡ Yorumlayıcı ile Çalıştır (Python/JS)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.4rem;">Sistem Konsol Çıktısı (Execution Terminal):</div>
+                    <div id="compilerConsole" class="console">> Sistem hazır. Bir çalıştırma yöntemi seçin...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODÜL 2: Değişkenler ve Bellek -->
+        <div id="variables" class="module">
+            <h2>📦 RAM Bellek ve Değişken Kutuları</h2>
+            <div class="instruction">
+                <strong>Görev:</strong> Değişkenler bellekte (RAM) açılan etiketli kutulardır. Aşağıdan veri tipi ve değer seçerek değişkeni tanımlayın ve RAM adresindeki değişimleri izleyin.
+            </div>
+
+            <div class="grid-2">
+                <div style="background:#090d16; padding:1.25rem; border-radius:8px; border:1px solid var(--border);">
+                    <label style="font-size:0.85rem; color:var(--text-muted);">Değişken Adı:</label>
+                    <input type="text" id="varName" value="ogrenciNotu" style="width:100%; padding:0.5rem; background:#1e293b; border:1px solid var(--border); color:#fff; border-radius:6px; margin:0.4rem 0 1rem 0;">
+
+                    <label style="font-size:0.85rem; color:var(--text-muted);">Veri Tipi:</label>
+                    <select id="varType" style="width:100%; padding:0.5rem; background:#1e293b; border:1px solid var(--border); color:#fff; border-radius:6px; margin:0.4rem 0 1rem 0;">
+                        <option value="int">int (Tam Sayı - Örn: 85)</option>
+                        <option value="string">string (Metin - Örn: "Ahmet")</option>
+                        <option value="bool">bool (Mantıksal - true / false)</option>
+                        <option value="double">double (Ondalıklı - Örn: 3.14)</option>
+                    </select>
+
+                    <label style="font-size:0.85rem; color:var(--text-muted);">Değer:</label>
+                    <input type="text" id="varVal" value="90" style="width:100%; padding:0.5rem; background:#1e293b; border:1px solid var(--border); color:#fff; border-radius:6px; margin:0.4rem 0 1rem 0;">
+
+                    <button class="btn btn-success" onclick="assignVariable()">💾 Değişkeni RAM'e Ata</button>
+                </div>
+
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.4rem;">RAM Bellek Görünümü (Stack Memory):</div>
+                    <div id="memorySlots" class="memory-slots">
+                        <div class="slot" id="slot-0">
+                            <div class="slot-name">RAM_0x01</div>
+                            <div class="slot-value">--</div>
+                            <span class="slot-type">Boş</span>
+                        </div>
+                        <div class="slot" id="slot-1">
+                            <div class="slot-name">RAM_0x02</div>
+                            <div class="slot-value">--</div>
+                            <span class="slot-type">Boş</span>
+                        </div>
+                        <div class="slot" id="slot-2">
+                            <div class="slot-name">RAM_0x03</div>
+                            <div class="slot-value">--</div>
+                            <span class="slot-type">Boş</span>
+                        </div>
+                    </div>
+                    <div id="varLog" style="margin-top:1rem; font-size:0.85rem; color:var(--accent-green);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODÜL 3: Algoritma ve Karar Yapıları -->
+        <div id="flowchart" class="module">
+            <h2>🔀 Algoritma Mantığı: Lamba Arıza Giderme Karar Şeması</h2>
+            <div class="instruction">
+                <strong>Görev:</strong> Dersteki "Çalışmayan Lamba" algoritmasını interaktif olarak deneyimleyin. Koşulları (`Evet`/`Hayır`) seçerek program akışının sonuca nasıl ulaştığını takip edin.
+            </div>
+
+            <div style="max-width:600px; margin:0 auto;">
+                <div class="flow-card" id="node-1">
+                    <h3 style="font-size:1.1rem; color:#f87171;">⚠️ Problem: Lamba Çalışmıyor</h3>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Algoritma Başlatıldı.</p>
+                </div>
+
+                <div class="flow-card active-node" id="node-2">
+                    <h3 style="font-size:1rem; color:#fbbf24;">❓ Koşul 1: Lambanın Fişi Takılı mı? (if/else)</h3>
+                    <div class="flow-decision">
+                        <button class="btn btn-success" onclick="flowChoice(1, true)">Evet (True)</button>
+                        <button class="btn btn-amber" onclick="flowChoice(1, false)">Hayır (False)</button>
+                    </div>
+                </div>
+
+                <div class="flow-card" id="node-3" style="display:none;">
+                    <h3 style="font-size:1rem; color:#fbbf24;">❓ Koşul 2: Ampul Patlak mı?</h3>
+                    <div class="flow-decision">
+                        <button class="btn btn-amber" onclick="flowChoice(2, true)">Evet (Patlak)</button>
+                        <button class="btn btn-success" onclick="flowChoice(2, false)">Hayır (Sağlam)</button>
+                    </div>
+                </div>
+
+                <div class="flow-card" id="node-result" style="display:none; border-color:var(--accent-green); background:rgba(16,185,129,0.1);">
+                    <h3 id="resultTitle" style="color:#34d399;">💡 Çözüm Üretildi</h3>
+                    <p id="resultDesc" style="margin-top:0.5rem; font-size:0.95rem;"></p>
+                    <button class="btn" style="margin-top:1rem;" onclick="resetFlow()">🔄 Algoritmayı Başa Sar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODÜL 4: Döngüler ve Sayaç -->
+        <div id="loops" class="module">
+            <h2>🔁 Faktöriyel Algoritması ve Sayaç Simülatörü (`for` Döngüsü)</h2>
+            <div class="instruction">
+                <strong>Görev:</strong> Faktöriyel hesabında döngünün ($n \times (n-1) \dots$) adım adım nasıl çalıştığını ve `faktöriyel` değişkeninin bellekte nasıl güncellendiğini görün.
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label style="font-size:0.9rem; color:var(--text-muted);">Hesaplanacak Sayı ($n$):</label>
+                    <input type="number" id="loopN" value="5" min="1" max="8" style="width:80px; padding:0.4rem; background:#090d16; border:1px solid var(--border); color:#fff; border-radius:6px; margin-left:0.5rem;">
+                    
+                    <br>
+                    <button class="btn btn-success" onclick="startLoopAnimation()">▶️ Döngüyü Adım Adım Çalıştır</button>
+
+                    <div class="code-box" style="margin-top:1rem;">
+<span style="color:#64748b">// Faktöriyel Algoritması</span>
+<span style="color:#f43f5e">int</span> n = <span id="codeN">5</span>;
+<span style="color:#f43f5e">int</span> fak = 1;
+<span style="color:#f43f5e">for</span> (<span style="color:#f43f5e">int</span> i = 1; i <= n; i++) {
+    fak = fak * i; <span style="color:#64748b">// Canlı değer</span>
+}
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Döngü Sayaç Çizgisi ($i$ değeri):</div>
+                    <div class="loop-track" id="loopTrack">
+                        <!-- JS ile dolacak -->
+                    </div>
+
+                    <div style="background:#090d16; padding:1.25rem; border-radius:8px; border:1px solid var(--border); margin-top:1rem;">
+                        <div style="font-size:0.85rem; color:var(--text-muted);">Mevcut Adım Durumu:</div>
+                        <div style="font-size:1.3rem; font-family:'Fira Code', monospace; color:#38bdf8; margin:0.5rem 0;" id="loopStatus">Döngü bekleniyor...</div>
+                        <div style="font-size:0.9rem; color:#a3e635;" id="loopMath">faktöriyel = 1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab Geçişleri
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.module').forEach(mod => mod.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // MODÜL 1: Derleyici vs Yorumlayıcı
+        function runCompiler() {
+            const out = document.getElementById('compilerConsole');
+            out.innerHTML = `> [DERLEYİCİ] Derleme işlemi başlatıldı (C# Roslyn / GCC)...\n`;
+            setTimeout(() => {
+                out.innerHTML += `> Sözdizimi (Syntax) ve Tür Kontrolü yapılıyor...\n`;
+            }, 400);
+            setTimeout(() => {
+                out.innerHTML += `<span style="color:#ef4444;">[HATA] Satır 4: 'int' türüne 'string' atanamaz! (Tür Uyuşmazlığı)</span>\n`;
+                out.innerHTML += `<span style="color:#ef4444;">❌ DERLEME BAŞARISIZ OLDU. Makine kodu (.exe) üretilmedi! Hiçbir satır çalıştırılmadı.</span>`;
+            }, 900);
+        }
+
+        function runInterpreter() {
+            const out = document.getElementById('compilerConsole');
+            out.innerHTML = `> [YORUMLAYICI] Satır satır icra başlatıldı (Python/Node.js)...\n`;
+            setTimeout(() => {
+                out.innerHTML += `> Satır 1: a = 10 belleğe yazıldı.\n`;
+            }, 300);
+            setTimeout(() => {
+                out.innerHTML += `> Satır 2: b = 20 belleğe yazıldı.\n`;
+            }, 600);
+            setTimeout(() => {
+                out.innerHTML += `<span style="color:#38bdf8;">> Satır 3 ÇIKTI: 30</span>\n`;
+            }, 900);
+            setTimeout(() => {
+                out.innerHTML += `<span style="color:#ef4444;">[HATA] Satır 4 Runtime TypeError: Geçersiz değer ataması!</span>\n`;
+                out.innerHTML += `<span style="color:#f59e0b;">⚠️ Yorumlayıcı hata veren satırda durdu. (Önceki 3 satır başarıyla çalıştı!)</span>`;
+            }, 1300);
+        }
+
+        // MODÜL 2: Değişkenler
+        let slotIndex = 0;
+        function assignVariable() {
+            const name = document.getElementById('varName').value;
+            const type = document.getElementById('varType').value;
+            const val = document.getElementById('varVal').value;
+
+            // Basit tür kontrolü
+            if(type === 'int' && isNaN(parseInt(val))) {
+                alert("Hata: 'int' tam sayı türüne harf/metin giremezsiniz!");
+                return;
+            }
+
+            const currentSlot = document.getElementById(`slot-${slotIndex % 3}`);
+            currentSlot.classList.add('filled');
+            currentSlot.querySelector('.slot-name').innerText = name;
+            currentSlot.querySelector('.slot-value').innerText = val;
+            currentSlot.querySelector('.slot-type').innerText = type;
+
+            document.getElementById('varLog').innerHTML = `✅ [RAM] <code>${type} ${name} = ${val};</code> başarıyla saklandı.`;
+            slotIndex++;
+        }
+
+        // MODÜL 3: Karar Yapısı
+        function flowChoice(step, choice) {
+            if(step === 1) {
+                document.getElementById('node-2').classList.remove('active-node');
+                if(!choice) {
+                    showResult("🔌 Çözüm: Fişi Prize Takın!", "Lambanın fişi takılı olmadığı için elektrik devresi tamamlanmıyordu. Fişi prize takarak sorunu çözdünüz.");
+                } else {
+                    document.getElementById('node-3').style.display = 'block';
+                    document.getElementById('node-3').classList.add('active-node');
+                }
+            } else if(step === 2) {
+                document.getElementById('node-3').classList.remove('active-node');
+                if(choice) {
+                    showResult("💡 Çözüm: Ampulü Değiştirin!", "Fiş takılı fakat ampulün filamanı patlamış. Yeni bir ampul takarak aydınlatmayı sağladınız.");
+                } else {
+                    showResult("🛒 Çözüm: Yeni Bir Lamba Alın!", "Fiş takılı ve ampul sağlam olduğu halde lamba yanmıyorsa iç tesisatta arıza vardır; yeni lamba gerekir.");
+                }
+            }
+        }
+
+        function showResult(title, desc) {
+            document.getElementById('resultTitle').innerText = title;
+            document.getElementById('resultDesc').innerText = desc;
+            document.getElementById('node-result').style.display = 'block';
+        }
+
+        function resetFlow() {
+            document.getElementById('node-2').classList.add('active-node');
+            document.getElementById('node-3').style.display = 'none';
+            document.getElementById('node-result').style.display = 'none';
+        }
+
+        // MODÜL 4: Döngü
+        function startLoopAnimation() {
+            const n = parseInt(document.getElementById('loopN').value);
+            document.getElementById('codeN').innerText = n;
+            const track = document.getElementById('loopTrack');
+            track.innerHTML = '';
+
+            for(let i = 1; i <= n; i++) {
+                const el = document.createElement('div');
+                el.className = 'loop-step';
+                el.id = `step-${i}`;
+                el.innerText = `i=${i}`;
+                track.appendChild(el);
+            }
+
+            let currentI = 1;
+            let currentFak = 1;
+
+            const interval = setInterval(() => {
+                if(currentI > n) {
+                    clearInterval(interval);
+                    document.getElementById('loopStatus').innerText = `🎉 Tamamlandı! Sonuç: ${currentFak}`;
+                    return;
+                }
+
+                document.querySelectorAll('.loop-step').forEach(s => s.classList.remove('current'));
+                const stepEl = document.getElementById(`step-${currentI}`);
+                stepEl.classList.add('current');
+                stepEl.classList.add('passed');
+
+                const prevFak = currentFak;
+                currentFak = currentFak * currentI;
+
+                document.getElementById('loopStatus').innerText = `Adım ${currentI}: Sayaç i = ${currentI}`;
+                document.getElementById('loopMath').innerHTML = `faktöriyel = ${prevFak} × ${currentI} = <strong>${currentFak}</strong>`;
+
+                currentI++;
+            }, 800);
+        }
+    </script>
+</body>
+</html>

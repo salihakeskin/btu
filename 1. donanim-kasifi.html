@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donanım Kaşifi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0c1f18;
+    --bg-1:#122a20;
+    --panel:#163325;
+    --panel-2:#1b3c2c;
+    --trace:#2a5940;
+    --copper:#d99a5b;
+    --copper-dim:#8a5f37;
+    --gold:#e8c170;
+    --cyan:#4fd1c5;
+    --cyan-dim:#2c7c73;
+    --ink:#eef3ec;
+    --ink-dim:#a9c2b3;
+    --ink-faint:#6f8c7c;
+    --red:#e2645a;
+    --green:#7bc67e;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(79,209,197,0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(217,154,91,0.06), transparent 40%),
+      var(--bg-0);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 64px;}
+
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    color:var(--cyan);
+    text-transform:uppercase;
+    margin:0 0 10px;
+  }
+  h1{
+    font-size:34px;
+    font-weight:800;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    color:var(--ink-dim);
+    font-size:15px;
+    margin:0;
+    max-width:560px;
+    line-height:1.6;
+  }
+
+  nav.tabs{
+    display:flex;
+    gap:6px;
+    margin:28px 0 22px;
+    border-bottom:1px solid var(--trace);
+    flex-wrap:wrap;
+  }
+  nav.tabs button{
+    font-family:'Space Mono',monospace;
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:11px 16px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button:hover{color:var(--ink-dim);}
+  nav.tabs button.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ---------- KEŞFET TAB ---------- */
+  .board-area{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:760px){ .board-area{grid-template-columns:1fr;} }
+
+  .board{
+    position:relative;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 23px, rgba(79,209,197,0.045) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, rgba(79,209,197,0.045) 23px 24px),
+      var(--panel);
+    border:1px solid var(--trace);
+    border-radius:14px;
+    aspect-ratio:4/3;
+    overflow:hidden;
+  }
+  .board svg{position:absolute;inset:0;width:100%;height:100%;}
+
+  .hotspot{
+    position:absolute;
+    border:1.5px solid var(--copper-dim);
+    background:rgba(217,154,91,0.10);
+    border-radius:6px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:4px;
+    transition:background .15s, border-color .15s, transform .15s;
+  }
+  .hotspot span{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-dim);
+    letter-spacing:0.03em;
+    pointer-events:none;
+  }
+  .hotspot:hover{background:rgba(217,154,91,0.22);border-color:var(--copper);transform:scale(1.03);}
+  .hotspot.selected{background:rgba(79,209,197,0.20);border-color:var(--cyan);}
+  .hotspot.selected span{color:var(--cyan);}
+
+  .info-card{
+    background:var(--panel);
+    border:1px solid var(--trace);
+    border-radius:14px;
+    padding:20px 22px;
+    min-height:100%;
+  }
+  .info-card .placeholder{color:var(--ink-faint);font-size:14px;line-height:1.7;padding-top:6px;}
+  .info-tag{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    margin:0 0 6px;
+  }
+  .info-card h2{font-size:21px;margin:0 0 12px;font-weight:800;}
+  .info-card p{font-size:14px;line-height:1.75;color:var(--ink-dim);margin:0 0 12px;}
+  .info-card .fact{
+    font-size:13px;
+    color:var(--gold);
+    border-left:2px solid var(--gold);
+    padding-left:10px;
+    line-height:1.6;
+  }
+
+  /* ---------- EŞLEŞTİRME TAB ---------- */
+  .match-stats{
+    display:flex;gap:18px;margin-bottom:16px;
+    font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);
+  }
+  .match-stats b{color:var(--gold);}
+  .match-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  @media (max-width:600px){ .match-grid{grid-template-columns:repeat(2,1fr);} }
+  .card{
+    aspect-ratio:1/0.85;
+    border-radius:10px;
+    cursor:pointer;
+    position:relative;
+    perspective:600px;
+  }
+  .card-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .35s;transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute;inset:0;
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    padding:10px;text-align:center;
+    backface-visibility:hidden;
+    font-size:12.5px;line-height:1.4;
+  }
+  .card-front{
+    background:var(--panel-2);
+    border:1px solid var(--trace);
+    color:var(--copper);
+    font-family:'Space Mono',monospace;
+    font-size:20px;
+  }
+  .card-back{
+    background:var(--panel);
+    border:1px solid var(--cyan-dim);
+    color:var(--ink-dim);
+    transform:rotateY(180deg);
+  }
+  .card.matched .card-back{border-color:var(--green);color:var(--ink);}
+  .card.wrong .card-back{border-color:var(--red);}
+  .card.matched{opacity:0.55;cursor:default;}
+
+  /* ---------- QUIZ TAB ---------- */
+  .quiz-top{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);
+  }
+  .quiz-bar{height:4px;background:var(--trace);border-radius:2px;overflow:hidden;margin-bottom:22px;}
+  .quiz-bar-fill{height:100%;background:var(--cyan);transition:width .3s;}
+  .q-card{
+    background:var(--panel);border:1px solid var(--trace);border-radius:14px;
+    padding:24px;
+  }
+  .q-card h3{font-size:18px;margin:0 0 18px;font-weight:700;line-height:1.5;}
+  .opt{
+    display:block;width:100%;text-align:left;
+    background:var(--panel-2);border:1px solid var(--trace);
+    color:var(--ink);border-radius:8px;
+    padding:12px 14px;margin-bottom:10px;
+    font-size:14px;font-family:'Manrope',sans-serif;
+    cursor:pointer;transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--copper);}
+  .opt.correct{border-color:var(--green);background:rgba(123,198,126,0.12);color:var(--green);}
+  .opt.incorrect{border-color:var(--red);background:rgba(226,100,90,0.12);color:var(--red);}
+  .opt:disabled{cursor:default;}
+  .explain{
+    margin-top:14px;font-size:13.5px;color:var(--ink-dim);line-height:1.7;
+    border-top:1px solid var(--trace);padding-top:14px;display:none;
+  }
+  .explain.show{display:block;}
+  .next-btn{
+    margin-top:18px;background:var(--cyan-dim);border:none;color:#08201b;
+    font-family:'Space Mono',monospace;font-size:12.5px;letter-spacing:0.06em;
+    text-transform:uppercase;padding:11px 20px;border-radius:8px;cursor:pointer;
+    display:none;
+  }
+  .next-btn.show{display:inline-block;}
+  .quiz-done{text-align:center;padding:40px 20px;}
+  .quiz-done .score{font-family:'Space Mono',monospace;font-size:44px;color:var(--gold);margin:8px 0 6px;}
+  .quiz-done p{color:var(--ink-dim);font-size:14px;}
+  .restart-btn{
+    margin-top:16px;background:none;border:1px solid var(--copper);color:var(--copper);
+    font-family:'Space Mono',monospace;font-size:12.5px;padding:10px 18px;border-radius:8px;
+    cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Bilgisayar donanımı / interaktif ders materyali</p>
+    <h1>Donanım Kaşifi</h1>
+    <p>Bir anakartın üzerinde gezin, parçaları tanıyın, kart eşleştirme oyunuyla pekiştirin ve quiz ile kendinizi test edin.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="kesif">Kesif</button>
+    <button class="tab-btn" data-tab="eslestirme">Eslestirme</button>
+    <button class="tab-btn" data-tab="quiz">Quiz</button>
+  </nav>
+
+  <!-- ================= KEŞFET ================= -->
+  <section class="panel active" id="panel-kesif">
+    <div class="board-area">
+      <div class="board" id="board">
+        <svg viewBox="0 0 400 300" preserveAspectRatio="none">
+          <line x1="130" y1="70" x2="70" y2="20" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="240" y1="70" x2="300" y2="20" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="130" y1="140" x2="60" y2="140" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="130" y1="170" x2="60" y2="200" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="250" y1="150" x2="330" y2="150" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="200" y1="200" x2="200" y2="255" stroke="#2a5940" stroke-width="1.5"/>
+          <line x1="130" y1="100" x2="330" y2="230" stroke="#2a5940" stroke-width="1"/>
+        </svg>
+
+        <div class="hotspot" data-part="cpu" style="left:32%;top:22%;width:16%;height:20%;"><span>İŞLEMCİ (CPU)</span></div>
+        <div class="hotspot" data-part="ram" style="left:10%;top:4%;width:16%;height:14%;"><span>RAM</span></div>
+        <div class="hotspot" data-part="gpu" style="left:62%;top:4%;width:26%;height:12%;"><span>EKRAN KARTI</span></div>
+        <div class="hotspot" data-part="anakart" style="left:6%;top:44%;width:24%;height:14%;"><span>ANAKART</span></div>
+        <div class="hotspot" data-part="depolama" style="left:5%;top:62%;width:20%;height:14%;"><span>SSD / HDD</span></div>
+        <div class="hotspot" data-part="psu" style="left:70%;top:44%;width:24%;height:16%;"><span>GÜÇ KAYNAĞI</span></div>
+        <div class="hotspot" data-part="sogutucu" style="left:44%;top:60%;width:16%;height:24%;"><span>SOĞUTUCU</span></div>
+        <div class="hotspot" data-part="portlar" style="left:36%;top:88%;width:32%,height:9%;width:32%;height:9%;"><span>G/Ç PORTLARI</span></div>
+      </div>
+
+      <div class="info-card" id="infoCard">
+        <p class="placeholder">Soldaki şema üzerinde bir parçaya tıklayın — ne işe yaradığını burada göreceksiniz.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EŞLEŞTİRME ================= -->
+  <section class="panel" id="panel-eslestirme">
+    <div class="match-stats">
+      <span>Deneme: <b id="matchTries">0</b></span>
+      <span>Bulunan: <b id="matchFound">0</b> / 8</span>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="panel" id="panel-quiz">
+    <div id="quizArea">
+      <div class="quiz-top">
+        <span id="quizProgress">Soru 1 / 8</span>
+        <span id="quizScore">Puan: 0</span>
+      </div>
+      <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBar" style="width:12.5%;"></div></div>
+      <div class="q-card">
+        <h3 id="qText"></h3>
+        <div id="qOptions"></div>
+        <div class="explain" id="qExplain"></div>
+        <button class="next-btn" id="qNext">Sonraki soru →</button>
+      </div>
+    </div>
+    <div class="quiz-done" id="quizDone" style="display:none;">
+      <p class="eyebrow" style="text-align:center;">Sonuç</p>
+      <div class="score" id="finalScore">0 / 8</div>
+      <p id="finalMsg"></p>
+      <button class="restart-btn" id="quizRestart">Baştan başla</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const parts = {
+  cpu: {
+    name: "İşlemci (CPU)",
+    tag: "Merkezi İşlem Birimi",
+    desc: "Bilgisayarın beynidir. Programların verdiği komutları saniyede milyarlarca kez işleyerek yürütür; tüm hesaplamalar ve mantıksal işlemler burada gerçekleşir.",
+    fact: "Modern bir CPU'da milyarlarca transistör bulunur — hepsi bir tırnak büyüklüğündeki bir yüzeye sığdırılmıştır."
+  },
+  ram: {
+    name: "RAM (Bellek)",
+    tag: "Geçici Depolama",
+    desc: "İşlemcinin o an üzerinde çalıştığı verileri geçici olarak tutar. Sabit diske göre çok hızlıdır ama elektrik kesilince içeriği silinir.",
+    fact: "RAM az olduğunda bilgisayar yavaşlar çünkü sistem verileri sürekli yavaş depolama alanına 'takas' etmek zorunda kalır."
+  },
+  gpu: {
+    name: "Ekran Kartı (GPU)",
+    tag: "Grafik İşlem Birimi",
+    desc: "Görüntüleri, videoları ve 3B grafikleri işleyip ekrana aktarır. Çok sayıda basit işlemi aynı anda (paralel) yapmakta CPU'dan çok daha yeteneklidir.",
+    fact: "GPU'ların paralel işlem gücü, günümüzde yapay zeka modellerinin eğitiminde de yoğun biçimde kullanılıyor."
+  },
+  anakart: {
+    name: "Anakart (Motherboard)",
+    tag: "İskelet / Sinir Sistemi",
+    desc: "Tüm bileşenleri birbirine bağlayan devre kartıdır. CPU, RAM, depolama ve diğer parçalar arasındaki veri iletişimini sağlar.",
+    fact: "Anakart üzerindeki ince bakır izler (trace), tıpkı bir şehrin yolları gibi verinin akacağı güzergâhı belirler."
+  },
+  depolama: {
+    name: "Depolama (SSD / HDD)",
+    tag: "Kalıcı Bellek",
+    desc: "İşletim sistemi, programlar ve dosyalar burada kalıcı olarak saklanır. Elektrik kesilse bile veriler silinmez.",
+    fact: "SSD'ler hareketli parça içermediği için HDD'lere göre onlarca kat daha hızlı ve daha dayanıklıdır."
+  },
+  psu: {
+    name: "Güç Kaynağı (PSU)",
+    tag: "Enerji Dönüştürücü",
+    desc: "Prizden gelen alternatif akımı (AC), bilgisayar parçalarının kullanabileceği doğru akıma (DC) çevirir ve her bileşene uygun voltajda dağıtır.",
+    fact: "Yetersiz güçte bir PSU, güçlü bir ekran kartıyla birleştiğinde beklenmedik kapanmalara yol açabilir."
+  },
+  sogutucu: {
+    name: "Soğutucu (Fan / Sıvı Soğutma)",
+    tag: "Isı Yönetimi",
+    desc: "Çalışırken ısınan CPU ve GPU gibi parçaların sıcaklığını düşürerek performans kaybını ve donanım hasarını önler.",
+    fact: "Bazı yüksek performanslı sistemlerde hava yerine sıvı soğutma kullanılır — su, havadan çok daha fazla ısı taşıyabilir."
+  },
+  portlar: {
+    name: "G/Ç Portları",
+    tag: "Giriş / Çıkış",
+    desc: "USB, HDMI, ses ve ağ gibi bağlantı noktalarıdır. Bilgisayarın klavye, fare, monitör ve diğer dış aygıtlarla iletişim kurmasını sağlar.",
+    fact: "HDMI portu hem görüntüyü hem sesi tek bir kabloyla taşıyabilir."
+  }
+};
+
+/* ---------------- KEŞFET ---------------- */
+const board = document.getElementById('board');
+const infoCard = document.getElementById('infoCard');
+board.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', () => {
+    board.querySelectorAll('.hotspot').forEach(x => x.classList.remove('selected'));
+    h.classList.add('selected');
+    const p = parts[h.dataset.part];
+    infoCard.innerHTML = `
+      <p class="info-tag">${p.tag}</p>
+      <h2>${p.name}</h2>
+      <p>${p.desc}</p>
+      <p class="fact">${p.fact}</p>
+    `;
+  });
+});
+
+/* ---------------- SEKME GEÇİŞİ ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------------- EŞLEŞTİRME OYUNU ---------------- */
+const pairData = [
+  {term:"CPU", def:"Komutları işleyen merkezi birim"},
+  {term:"RAM", def:"Geçici ve hızlı çalışma belleği"},
+  {term:"GPU", def:"Görüntüleri paralel işleyen birim"},
+  {term:"SSD", def:"Hareketli parçasız kalıcı depolama"},
+  {term:"PSU", def:"AC akımı DC'ye çeviren kaynak"},
+  {term:"Anakart", def:"Tüm parçaları birbirine bağlayan kart"},
+  {term:"Fan", def:"Sıcak bileşenleri soğutan parça"},
+  {term:"HDMI", def:"Görüntü ve sesi taşıyan port"}
+];
+
+let matchState = { first:null, tries:0, found:0, lock:false };
+
+function buildMatchGrid(){
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  let cards = [];
+  pairData.forEach((p,i) => {
+    cards.push({id:'t'+i, label:p.term, pair:i, isTerm:true});
+    cards.push({id:'d'+i, label:p.def, pair:i, isTerm:false});
+  });
+  cards.sort(() => Math.random() - 0.5);
+
+  cards.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.pair = c.pair;
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-front">${c.isTerm ? '⚙' : '?'}</div>
+        <div class="card-face card-back">${c.label}</div>
+      </div>`;
+    el.addEventListener('click', () => onCardClick(el));
+    grid.appendChild(el);
+  });
+  matchState = {first:null, tries:0, found:0, lock:false};
+  document.getElementById('matchTries').textContent = 0;
+  document.getElementById('matchFound').textContent = 0;
+}
+
+function onCardClick(el){
+  if (matchState.lock || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+  el.classList.add('flipped');
+
+  if (!matchState.first){
+    matchState.first = el;
+    return;
+  }
+
+  matchState.lock = true;
+  matchState.tries++;
+  document.getElementById('matchTries').textContent = matchState.tries;
+
+  const a = matchState.first, b = el;
+  if (a.dataset.pair === b.dataset.pair && a.dataset.id !== b.dataset.id){
+    a.classList.add('matched');
+    b.classList.add('matched');
+    matchState.found++;
+    document.getElementById('matchFound').textContent = matchState.found;
+    matchState.first = null;
+    matchState.lock = false;
+  } else {
+    a.classList.add('wrong'); b.classList.add('wrong');
+    setTimeout(() => {
+      a.classList.remove('flipped','wrong');
+      b.classList.remove('flipped','wrong');
+      matchState.first = null;
+      matchState.lock = false;
+    }, 800);
+  }
+}
+buildMatchGrid();
+
+/* ---------------- QUIZ ---------------- */
+const quizData = [
+  {q:"CPU'nun temel görevi nedir?", opts:["Görüntüyü ekrana aktarmak","Komutları işlemek ve hesaplama yapmak","Verileri kalıcı olarak saklamak","Elektriği DC'ye çevirmek"], correct:1,
+   exp:"CPU (İşlemci), programların komutlarını yürüten ve hesaplamaları yapan merkezi birimdir."},
+  {q:"Elektrik kesildiğinde içeriği silinen bileşen hangisidir?", opts:["SSD","HDD","RAM","Anakart"], correct:2,
+   exp:"RAM geçici (uçucu) bir bellektir; güç kesilince üzerindeki veriler kaybolur."},
+  {q:"3B grafikleri ve görüntü işlemeyi hangi bileşen üstlenir?", opts:["PSU","GPU","RAM","Soğutucu"], correct:1,
+   exp:"GPU (Ekran Kartı), çok sayıda işlemi paralel yaparak grafik ve görüntü işlemede uzmanlaşmıştır."},
+  {q:"Aşağıdakilerden hangisi 'kalıcı depolama' örneğidir?", opts:["RAM","Önbellek (cache)","SSD","İşlemci çekirdeği"], correct:2,
+   exp:"SSD, elektrik kesilse bile verileri kalıcı olarak saklar; RAM ise geçicidir."},
+  {q:"Güç kaynağının (PSU) temel işlevi nedir?", opts:["Veriyi işlemek","AC akımı DC'ye çevirmek","Isıyı dağıtmak","Görüntü üretmek"], correct:1,
+   exp:"PSU, prizden gelen alternatif akımı bilgisayar parçalarının kullanabileceği doğru akıma çevirir."},
+  {q:"SSD'lerin HDD'lere göre en belirgin avantajı nedir?", opts:["Daha ucuz olmaları","Hareketli parça içermedikleri için daha hızlı olmaları","Daha fazla ısı üretmeleri","Daha az veri saklayabilmeleri"], correct:1,
+   exp:"SSD'ler hareketli mekanik parça kullanmadığı için verilere çok daha hızlı erişebilir."},
+  {q:"Tüm donanım bileşenlerini birbirine bağlayan parça hangisidir?", opts:["Soğutucu","Anakart","G/Ç portu","PSU"], correct:1,
+   exp:"Anakart, CPU, RAM, depolama ve diğer bileşenler arasındaki bağlantıyı ve veri iletişimini sağlar."},
+  {q:"HDMI portu ne işe yarar?", opts:["Sadece ses taşır","Sadece görüntü taşır","Görüntü ve sesi birlikte taşır","Sadece güç taşır"], correct:2,
+   exp:"HDMI, tek bir kabloyla hem görüntü hem ses sinyalini taşıyabilir."}
+];
+
+let quizIdx = 0, quizScore = 0;
+
+function renderQuiz(){
+  const q = quizData[quizIdx];
+  document.getElementById('quizProgress').textContent = `Soru ${quizIdx+1} / ${quizData.length}`;
+  document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  document.getElementById('quizBar').style.width = ((quizIdx)/quizData.length*100 + 100/quizData.length) + '%';
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qExplain').classList.remove('show');
+  document.getElementById('qExplain').textContent = '';
+  document.getElementById('qNext').classList.remove('show');
+
+  const optsWrap = document.getElementById('qOptions');
+  optsWrap.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => answerQuiz(i));
+    optsWrap.appendChild(b);
+  });
+}
+
+function answerQuiz(i){
+  const q = quizData[quizIdx];
+  const buttons = document.querySelectorAll('#qOptions .opt');
+  buttons.forEach(b => b.disabled = true);
+  buttons[q.correct].classList.add('correct');
+  if (i !== q.correct){
+    buttons[i].classList.add('incorrect');
+  } else {
+    quizScore++;
+    document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  }
+  const ex = document.getElementById('qExplain');
+  ex.textContent = q.exp;
+  ex.classList.add('show');
+  document.getElementById('qNext').classList.add('show');
+}
+
+document.getElementById('qNext').addEventListener('click', () => {
+  quizIdx++;
+  if (quizIdx >= quizData.length){
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('quizDone').style.display = 'block';
+    document.getElementById('finalScore').textContent = `${quizScore} / ${quizData.length}`;
+    let msg = "Harika iş! Donanım konusuna hakimsin.";
+    if (quizScore <= quizData.length*0.5) msg = "Fena değil — Keşfet ve Eşleştirme sekmelerine tekrar göz atmak faydalı olabilir.";
+    else if (quizScore < quizData.length) msg = "Gayet iyi! Birkaç konuyu tekrar gözden geçirebilirsin.";
+    document.getElementById('finalMsg').textContent = msg;
+  } else {
+    renderQuiz();
+  }
+});
+
+document.getElementById('quizRestart').addEventListener('click', () => {
+  quizIdx = 0; quizScore = 0;
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('quizDone').style.display = 'none';
+  renderQuiz();
+});
+
+renderQuiz();
+</script>
+</body>
+</html>

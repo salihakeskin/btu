@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowchart Studio — Akış Diyagramı Çizim Aracı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-toolbar: #090d16;
+            --primary: #3b82f6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --grid-color: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Üst Araç Çubuğu */
+        header {
+            background: var(--bg-toolbar);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--bg-panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger { background: rgba(239, 68, 68, 0.2); border-color: var(--accent-red); color: #fca5a5; }
+        .btn-danger:hover { background: var(--accent-red); color: white; }
+
+        /* Ana Gövde Alanı */
+        .workspace {
+            display: flex;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sol Şekil Paleti (Sidebar) */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .shape-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .shape-item {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .shape-item:hover {
+            border-color: var(--primary);
+            background: #1e293b;
+            transform: translateX(4px);
+        }
+
+        .shape-preview-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Çizim Tuvali (Canvas Area) */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background-color: var(--bg-canvas);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: auto;
+        }
+
+        svg#connectorCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4000px;
+            height: 4000px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .diagram-node {
+            position: absolute;
+            min-width: 140px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            cursor: move;
+            z-index: 2;
+            transition: box-shadow 0.2s;
+        }
+
+        .diagram-node:hover, .diagram-node.selected {
+            box-shadow: 0 0 0 2px var(--primary), 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .node-text {
+            outline: none;
+            cursor: text;
+            user-select: text;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+            width: 100%;
+            word-break: break-word;
+        }
+
+        /* Şekil Türleri CSS */
+        .shape-terminal {
+            background: #1e3a8a;
+            border: 2px solid #3b82f6;
+            border-radius: 25px;
+        }
+
+        .shape-process {
+            background: #064e3b;
+            border: 2px solid #10b981;
+            border-radius: 6px;
+        }
+
+        .shape-decision {
+            background: #78350f;
+            border: 2px solid #f59e0b;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            min-width: 140px;
+            min-height: 90px;
+            padding: 1.5rem 1rem;
+        }
+
+        .shape-io {
+            background: #581c87;
+            border: 2px solid #a855f7;
+            transform: skew(-15deg);
+            border-radius: 4px;
+        }
+        .shape-io .node-text {
+            transform: skew(15deg);
+        }
+
+        /* Bağlantı Noktaları (Ports) */
+        .port {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: crosshair;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .diagram-node:hover .port {
+            opacity: 1;
+        }
+
+        .port.top { top: -6px; left: calc(50% - 5px); }
+        .port.bottom { bottom: -6px; left: calc(50% - 5px); }
+        .port.left { left: -6px; top: calc(50% - 5px); }
+        .port.right { right: -6px; top: calc(50% - 5px); }
+
+        /* Sağ Bilgi & İpucu Bölmesi */
+        .info-panel {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .info-panel kbd {
+            background: #334155;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4M6.5 10v4M14 17.5h-4M17.5 10v4"/></svg>
+            Flowchart Studio
+        </div>
+
+        <div class="toolbar-actions">
+            <button class="btn" onclick="loadTemplate('lamp')">💡 Lamba Algoritması Yükle</button>
+            <button class="btn" onclick="loadTemplate('factorial')">🔁 Faktöriyel Şablonu</button>
+            <button class="btn btn-primary" onclick="exportPNG()">📷 PNG Olarak İndir</button>
+            <button class="btn btn-danger" onclick="clearCanvas()">🗑️ Temizle</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <!-- Sol Şekil Kütüphanesi -->
+        <div class="sidebar">
+            <div class="sidebar-title">Akış Şeması Şekilleri</div>
+            <div class="shape-list">
+                <div class="shape-item" draggable="true" ondragstart="handleDragStart(event, 'terminal')">
+                    <div class="shape-preview-icon">
+                        <svg width="24" height="14"><rect width="24" height="14" rx="7" fill="#3b82f6"/></svg>
+                    </div>
+                    <span>Başla / Bitir (Elips)</span>
+                </div>
+
+                <div class="shape-item" draggable="true" ondragstart="handleDragStart(event, 'process')">
+                    <div class="shape-preview-icon">
+                        <svg width="24" height="16"><rect width="24" height="16" rx="2" fill="#10b981"/></svg>
+                    </div>
+                    <span>İşlem (Dikdörtgen)</span>
+                </div>
+
+                <div class="shape-item" draggable="true" ondragstart="handleDragStart(event, 'decision')">
+                    <div class="shape-preview-icon">
+                        <svg width="20" height="20"><polygon points="10,1 19,10 10,19 1,10" fill="#f59e0b"/></svg>
+                    </div>
+                    <span>Karar / Koşul (Eşkenar)</span>
+                </div>
+
+                <div class="shape-item" draggable="true" ondragstart="handleDragStart(event, 'io')">
+                    <div class="shape-preview-icon">
+                        <svg width="24" height="16"><polygon points="5,1 23,1 19,15 1,15" fill="#a855f7"/></svg>
+                    </div>
+                    <span>Girdi / Çıktı (Paralelkenar)</span>
+                </div>
+            </div>
+
+            <div class="sidebar-title" style="margin-top:1rem;">Kullanım İpuçları</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); line-height:1.5;">
+                • Şekilleri tuvale sürükleyip bırakın.<br>
+                • Metinleri çift tıklayarak düzenleyin.<br>
+                • Mavi noktalardan sürükleyerek bağlantı oku oluşturun.<br>
+                • Seçili şekli silmek için <kbd>Delete</kbd> tuşuna basın.
+            </p>
+        </div>
+
+        <!-- Çizim Alanı (Canvas) -->
+        <div class="canvas-container" id="canvasContainer" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+            <svg id="connectorCanvas">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#60a5fa"/>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="info-panel">
+            Çizim Alanı: <strong>Aktif</strong> | Şekil Sayısı: <span id="nodeCount">0</span>
+        </div>
+    </div>
+
+    <!-- Html2Canvas Kütüphanesi (PNG Dışa Aktarma İçin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        let nodes = [];
+        let connections = [];
+        let selectedNode = null;
+        let connectingPort = null;
+        let tempLine = null;
+
+        const canvasContainer = document.getElementById('canvasContainer');
+        const svgCanvas = document.getElementById('connectorCanvas');
+
+        // Sürükle - Bırak İşlemleri
+        function handleDragStart(e, shapeType) {
+            e.dataTransfer.setData('shapeType', shapeType);
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const shapeType = e.dataTransfer.getData('shapeType');
+            if (!shapeType) return;
+
+            const rect = canvasContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left + canvasContainer.scrollLeft - 70;
+            const y = e.clientY - rect.top + canvasContainer.scrollTop - 25;
+
+            createNode(shapeType, x, y);
+        }
+
+        // Yeni Düğüm / Şekil Oluşturma
+        function createNode(type, x, y, defaultText) {
+            const id = 'node_' + Date.now() + Math.random().toString(36).substr(2, 4);
+            const node = document.createElement('div');
+            node.className = `diagram-node shape-${type}`;
+            node.id = id;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+
+            let label = defaultText;
+            if (!label) {
+                if (type === 'terminal') label = 'BAŞLA';
+                else if (type === 'process') label = 'İşlem Yap';
+                else if (type === 'decision') label = 'Koşul Doğru mu?';
+                else if (type === 'io') label = 'Veri Oku / Yaz';
+            }
+
+            node.innerHTML = `
+                <div class="port top" data-port="top"></div>
+                <div class="port right" data-port="right"></div>
+                <div class="port bottom" data-port="bottom"></div>
+                <div class="port left" data-port="left"></div>
+                <div class="node-text" contenteditable="true" spellcheck="false">${label}</div>
+            `;
+
+            // Olay Dinleyicileri (Taşıma & Seçim)
+            makeDraggable(node);
+            setupPortEvents(node);
+
+            node.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('port')) return;
+                selectNode(node);
+            });
+
+            canvasContainer.appendChild(node);
+            nodes.push({ id, element: node, type });
+            updateNodeCount();
+            return node;
+        }
+
+        // Şekil Taşıma (Drag Logic)
+        function makeDraggable(el) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            el.onmousedown = function(e) {
+                if (e.target.isContentEditable || e.target.classList.contains('port')) return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            };
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                el.style.top = (el.offsetTop - pos2) + "px";
+                el.style.left = (el.offsetLeft - pos1) + "px";
+                renderConnections();
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Bağlantı Noktası (Port) Olayları
+        function setupPortEvents(node) {
+            const ports = node.querySelectorAll('.port');
+            ports.forEach(port => {
+                port.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    const portType = port.dataset.port;
+                    startConnecting(node.id, portType, e);
+                });
+            });
+        }
+
+        function startConnecting(nodeId, portType, e) {
+            connectingPort = { nodeId, portType };
+            
+            tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tempLine.setAttribute('stroke', '#60a5fa');
+            tempLine.setAttribute('stroke-width', '2');
+            tempLine.setAttribute('stroke-dasharray', '4');
+            svgCanvas.appendChild(tempLine);
+
+            const startCoords = getPortCoordinates(nodeId, portType);
+
+            function onMouseMove(moveEvent) {
+                const rect = canvasContainer.getBoundingClientRect();
+                const endX = moveEvent.clientX - rect.left + canvasContainer.scrollLeft;
+                const endY = moveEvent.clientY - rect.top + canvasContainer.scrollTop;
+
+                tempLine.setAttribute('x1', startCoords.x);
+                tempLine.setAttribute('y1', startCoords.y);
+                tempLine.setAttribute('x2', endX);
+                tempLine.setAttribute('y2', endY);
+            }
+
+            function onMouseUp(upEvent) {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                if (tempLine) tempLine.remove();
+
+                const targetEl = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+                if (targetEl && targetEl.classList.contains('port')) {
+                    const targetNode = targetEl.closest('.diagram-node');
+                    const targetPortType = targetEl.dataset.port;
+
+                    if (targetNode && targetNode.id !== connectingPort.nodeId) {
+                        connections.push({
+                            from: connectingPort.nodeId,
+                            fromPort: connectingPort.portType,
+                            to: targetNode.id,
+                            toPort: targetPortType
+                        });
+                        renderConnections();
+                    }
+                }
+                connectingPort = null;
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function getPortCoordinates(nodeId, portType) {
+            const el = document.getElementById(nodeId);
+            if (!el) return { x: 0, y: 0 };
+
+            const x = el.offsetLeft;
+            const y = el.offsetTop;
+            const w = el.offsetWidth;
+            const h = el.offsetHeight;
+
+            if (portType === 'top') return { x: x + w / 2, y: y };
+            if (portType === 'bottom') return { x: x + w / 2, y: y + h };
+            if (portType === 'left') return { x: x, y: y + h / 2 };
+            if (portType === 'right') return { x: x + w, y: y + h / 2 };
+            return { x: x + w / 2, y: y + h / 2 };
+        }
+
+        // Çizgileri SVG Üzerinde Çizme
+        function renderConnections() {
+            // Varolan çizgileri temizle (marker defs hariç)
+            const lines = svgCanvas.querySelectorAll('path.connector-line');
+            lines.forEach(l => l.remove());
+
+            connections.forEach(conn => {
+                const start = getPortCoordinates(conn.from, conn.fromPort);
+                const end = getPortCoordinates(conn.to, conn.toPort);
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.classList.add('connector-line');
+
+                // Akıllı Kıvrımlı Yol (Orthogonal/Curved Path)
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const d = `M ${start.x} ${start.y} C ${start.x + dx/2} ${start.y}, ${start.x + dx/2} ${end.y}, ${end.x} ${end.y}`;
+
+                path.setAttribute('d', d);
+                path.setAttribute('stroke', '#60a5fa');
+                path.setAttribute('stroke-width', '2.5');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('marker-end', 'url(#arrow)');
+
+                svgCanvas.appendChild(path);
+            });
+        }
+
+        // Seçim ve Silme
+        function selectNode(node) {
+            if (selectedNode) selectedNode.classList.remove('selected');
+            selectedNode = node;
+            selectedNode.classList.add('selected');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' && selectedNode && !document.activeElement.isContentEditable) {
+                const id = selectedNode.id;
+                connections = connections.filter(c => c.from !== id && c.to !== id);
+                nodes = nodes.filter(n => n.id !== id);
+                selectedNode.remove();
+                selectedNode = null;
+                renderConnections();
+                updateNodeCount();
+            }
+        });
+
+        function updateNodeCount() {
+            document.getElementById('nodeCount').innerText = nodes.length;
+        }
+
+        function clearCanvas() {
+            if (confirm("Çizim alanındaki tüm şekiller ve bağlantılar silinsin mi?")) {
+                nodes.forEach(n => n.element.remove());
+                nodes = [];
+                connections = [];
+                renderConnections();
+                updateNodeCount();
+            }
+        }
+
+        // Hazır Şablonlar (Templates)
+        function loadTemplate(name) {
+            clearCanvas();
+
+            if (name === 'lamp') {
+                const n1 = createNode('terminal', 320, 40, 'BAŞLA');
+                const n2 = createNode('decision', 300, 130, 'Lamba Fişi Takılı mı?');
+                const n3 = createNode('process', 560, 150, 'Fişi Prize Tak');
+                const n4 = createNode('decision', 300, 270, 'Ampul Patlak mı?');
+                const n5 = createNode('process', 560, 290, 'Ampulü Değiştir');
+                const n6 = createNode('process', 300, 410, 'Yeni Lamba Al');
+                const n7 = createNode('terminal', 320, 520, 'BİTİR');
+
+                connections.push({ from: n1.id, fromPort: 'bottom', to: n2.id, toPort: 'top' });
+                connections.push({ from: n2.id, fromPort: 'right', to: n3.id, toPort: 'left' });
+                connections.push({ from: n2.id, fromPort: 'bottom', to: n4.id, toPort: 'top' });
+                connections.push({ from: n4.id, fromPort: 'right', to: n5.id, toPort: 'left' });
+                connections.push({ from: n4.id, fromPort: 'bottom', to: n6.id, toPort: 'top' });
+                connections.push({ from: n6.id, fromPort: 'bottom', to: n7.id, toPort: 'top' });
+            } else if (name === 'factorial') {
+                const n1 = createNode('terminal', 320, 40, 'BAŞLA');
+                const n2 = createNode('io', 310, 130, 'n Sayısını Gir');
+                const n3 = createNode('process', 310, 220, 'faktöriyel = 1\nsayaç = 1');
+                const n4 = createNode('decision', 300, 320, 'sayaç <= n ?');
+                const n5 = createNode('process', 550, 335, 'faktöriyel = faktöriyel * sayaç\nsayaç = sayaç + 1');
+                const n6 = createNode('io', 310, 470, 'faktöriyel Değerini Yazdır');
+                const n7 = createNode('terminal', 320, 570, 'BİTİR');
+
+                connections.push({ from: n1.id, fromPort: 'bottom', to: n2.id, toPort: 'top' });
+                connections.push({ from: n2.id, fromPort: 'bottom', to: n3.id, toPort: 'top' });
+                connections.push({ from: n3.id, fromPort: 'bottom', to: n4.id, toPort: 'top' });
+                connections.push({ from: n4.id, fromPort: 'right', to: n5.id, toPort: 'left' });
+                connections.push({ from: n5.id, fromPort: 'top', to: n4.id, toPort: 'top' });
+                connections.push({ from: n4.id, fromPort: 'bottom', to: n6.id, toPort: 'top' });
+                connections.push({ from: n6.id, fromPort: 'bottom', to: n7.id, toPort: 'top' });
+            }
+
+            renderConnections();
+        }
+
+        // PNG Dışa Aktarma
+        function exportPNG() {
+            if (nodes.length === 0) {
+                alert("Dışa aktarmak için önce tuvale bir diyagram çizin!");
+                return;
+            }
+
+            const canvasArea = document.getElementById('canvasContainer');
+            html2canvas(canvasArea, {
+                backgroundColor: '#0f172a',
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'akis_diyagrami.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilişim Temelleri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0c1f18; --bg-1:#122a20; --panel:#163325; --panel-2:#1b3c2c;
+    --trace:#2a5940; --copper:#d99a5b; --copper-dim:#8a5f37; --gold:#e8c170;
+    --cyan:#4fd1c5; --cyan-dim:#2c7c73; --ink:#eef3ec; --ink-dim:#a9c2b3;
+    --ink-faint:#6f8c7c; --red:#e2645a; --green:#7bc67e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(79,209,197,0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(217,154,91,0.06), transparent 40%),
+      var(--bg-0);
+    color:var(--ink); font-family:'Manrope',sans-serif; min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 64px;}
+  header{margin-bottom:28px;}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;color:var(--cyan);text-transform:uppercase;margin:0 0 10px;}
+  h1{font-size:32px;font-weight:800;margin:0 0 8px;letter-spacing:-0.01em;line-height:1.2;}
+  header p{color:var(--ink-dim);font-size:15px;margin:0;max-width:640px;line-height:1.6;}
+
+  nav.tabs{display:flex;gap:6px;margin:28px 0 22px;border-bottom:1px solid var(--trace);flex-wrap:wrap;}
+  nav.tabs button{font-family:'Space Mono',monospace;background:none;border:none;color:var(--ink-faint);font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase;padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s, border-color .15s;}
+  nav.tabs button:hover{color:var(--ink-dim);}
+  nav.tabs button.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ---------- KEŞFET ---------- */
+  .topic-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .topic-btn{font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:0.03em;background:var(--panel);border:1px solid var(--trace);color:var(--ink-dim);padding:10px 14px;border-radius:8px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
+  .topic-btn:hover{border-color:var(--copper);color:var(--ink);}
+  .topic-btn.active{background:rgba(79,209,197,0.14);border-color:var(--cyan);color:var(--cyan);}
+  .explore-area{display:grid;grid-template-columns:220px 1fr;gap:18px;}
+  @media (max-width:700px){ .explore-area{grid-template-columns:1fr;} }
+  .subtopic-list{background:var(--panel);border:1px solid var(--trace);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px;height:fit-content;}
+  .subtopic-item{text-align:left;background:none;border:none;color:var(--ink-dim);font-size:13px;padding:10px 12px;border-radius:7px;cursor:pointer;transition:background .15s,color .15s;line-height:1.4;}
+  .subtopic-item:hover{background:var(--panel-2);color:var(--ink);}
+  .subtopic-item.active{background:rgba(217,154,91,0.16);color:var(--copper);}
+  .info-card{background:var(--panel);border:1px solid var(--trace);border-radius:14px;padding:22px 24px;min-height:280px;}
+  .info-tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);margin:0 0 6px;}
+  .info-card h2{font-size:21px;margin:0 0 14px;font-weight:800;line-height:1.3;}
+  .info-card p{font-size:14.5px;line-height:1.8;color:var(--ink-dim);margin:0 0 14px;}
+  .info-card .fact{font-size:13px;color:var(--gold);border-left:2px solid var(--gold);padding-left:10px;line-height:1.65;}
+
+  /* ---------- İKİLİ SİSTEM ---------- */
+  .binary-section{background:var(--panel);border:1px solid var(--trace);border-radius:14px;padding:22px 24px;margin-bottom:20px;}
+  .binary-section h3{font-size:16px;margin:0 0 4px;font-weight:700;}
+  .binary-section .sub{font-size:13px;color:var(--ink-faint);margin:0 0 18px;}
+  .bit-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+  .bit-col{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .bit-weight{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--ink-faint);}
+  .bit-toggle{
+    width:46px;height:46px;border-radius:8px;border:1.5px solid var(--trace);
+    background:var(--panel-2);color:var(--ink-faint);font-family:'Space Mono',monospace;
+    font-size:18px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+  }
+  .bit-toggle.on{background:rgba(79,209,197,0.20);border-color:var(--cyan);color:var(--cyan);}
+  .binary-result{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;font-family:'Space Mono',monospace;}
+  .binary-result .val{font-size:30px;color:var(--gold);}
+  .binary-result .lbl{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;}
+  .dec-input-row{display:flex;justify-content:center;gap:10px;margin-top:18px;align-items:center;}
+  .dec-input-row input{
+    width:90px;background:var(--panel-2);border:1px solid var(--trace);color:var(--ink);
+    font-family:'Space Mono',monospace;font-size:14px;border-radius:7px;padding:8px 10px;text-align:center;
+  }
+  .dec-input-row button{
+    background:var(--cyan-dim);border:none;color:#08201b;font-family:'Space Mono',monospace;
+    font-size:12px;letter-spacing:0.05em;text-transform:uppercase;padding:9px 16px;border-radius:7px;cursor:pointer;
+  }
+
+  .gate-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
+  .gate-btn{font-family:'Space Mono',monospace;font-size:12px;background:var(--panel-2);border:1px solid var(--trace);color:var(--ink-dim);padding:8px 14px;border-radius:7px;cursor:pointer;}
+  .gate-btn.active{background:rgba(217,154,91,0.18);border-color:var(--copper);color:var(--copper);}
+  .gate-demo{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:18px;}
+  .gate-io{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .gate-io .lbl{font-size:11px;color:var(--ink-faint);font-family:'Space Mono',monospace;}
+  .gate-arrow{color:var(--ink-faint);font-size:20px;}
+  .truth-table{margin:0 auto;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:13px;}
+  .truth-table th,.truth-table td{border:1px solid var(--trace);padding:7px 16px;text-align:center;color:var(--ink-dim);}
+  .truth-table th{color:var(--cyan);font-weight:700;}
+  .truth-table tr.current td{background:rgba(79,209,197,0.14);color:var(--ink);}
+
+  /* ---------- EŞLEŞTİRME ---------- */
+  .match-stats{display:flex;gap:18px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);}
+  .match-stats b{color:var(--gold);}
+  .match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:600px){ .match-grid{grid-template-columns:repeat(2,1fr);} }
+  .card{aspect-ratio:1/0.85;border-radius:10px;cursor:pointer;position:relative;perspective:600px;}
+  .card-inner{position:relative;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d;}
+  .card.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{position:absolute;inset:0;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;backface-visibility:hidden;font-size:12px;line-height:1.4;}
+  .card-front{background:var(--panel-2);border:1px solid var(--trace);color:var(--copper);font-family:'Space Mono',monospace;font-size:18px;}
+  .card-back{background:var(--panel);border:1px solid var(--cyan-dim);color:var(--ink-dim);transform:rotateY(180deg);}
+  .card.matched .card-back{border-color:var(--green);color:var(--ink);}
+  .card.wrong .card-back{border-color:var(--red);}
+  .card.matched{opacity:0.55;cursor:default;}
+
+  /* ---------- QUIZ ---------- */
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);}
+  .quiz-bar{height:4px;background:var(--trace);border-radius:2px;overflow:hidden;margin-bottom:22px;}
+  .quiz-bar-fill{height:100%;background:var(--cyan);transition:width .3s;}
+  .q-card{background:var(--panel);border:1px solid var(--trace);border-radius:14px;padding:24px;}
+  .q-card h3{font-size:17.5px;margin:0 0 18px;font-weight:700;line-height:1.5;}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--trace);color:var(--ink);border-radius:8px;padding:12px 14px;margin-bottom:10px;font-size:14px;font-family:'Manrope',sans-serif;cursor:pointer;transition:border-color .15s,background .15s;}
+  .opt:hover{border-color:var(--copper);}
+  .opt.correct{border-color:var(--green);background:rgba(123,198,126,0.12);color:var(--green);}
+  .opt.incorrect{border-color:var(--red);background:rgba(226,100,90,0.12);color:var(--red);}
+  .opt:disabled{cursor:default;}
+  .explain{margin-top:14px;font-size:13.5px;color:var(--ink-dim);line-height:1.75;border-top:1px solid var(--trace);padding-top:14px;display:none;}
+  .explain.show{display:block;}
+  .next-btn{margin-top:18px;background:var(--cyan-dim);border:none;color:#08201b;font-family:'Space Mono',monospace;font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase;padding:11px 20px;border-radius:8px;cursor:pointer;display:none;}
+  .next-btn.show{display:inline-block;}
+  .quiz-done{text-align:center;padding:40px 20px;}
+  .quiz-done .score{font-family:'Space Mono',monospace;font-size:44px;color:var(--gold);margin:8px 0 6px;}
+  .quiz-done p{color:var(--ink-dim);font-size:14px;}
+  .restart-btn{margin-top:16px;background:none;border:1px solid var(--copper);color:var(--copper);font-family:'Space Mono',monospace;font-size:12.5px;padding:10px 18px;border-radius:8px;cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Bilgisayar bilimi / temel kavramlar</p>
+    <h1>Bilişim Temelleri</h1>
+    <p>Temel kavramlar, sayısal mantık, sistem mimarisi, donanım bileşenleri ve modern işletim sistemlerini inceleyin; ikili sayı sistemi ve mantık kapılarıyla bizzat deney yapın, terimleri eşleştirin, quiz ile kendinizi test edin.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="kesif">Kesif</button>
+    <button class="tab-btn" data-tab="ikili">Ikili Sistem</button>
+    <button class="tab-btn" data-tab="eslestirme">Eslestirme</button>
+    <button class="tab-btn" data-tab="quiz">Quiz</button>
+  </nav>
+
+  <!-- ================= KEŞFET ================= -->
+  <section class="panel active" id="panel-kesif">
+    <div class="topic-row" id="topicRow"></div>
+    <div class="explore-area">
+      <div class="subtopic-list" id="subtopicList"></div>
+      <div class="info-card" id="infoCard">
+        <p style="color:var(--ink-faint);font-size:14px;line-height:1.7;">Bir konu başlığı ve ardından alt konu seçin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= İKİLİ SİSTEM ================= -->
+  <section class="panel" id="panel-ikili">
+    <div class="binary-section">
+      <h3>Bit ve byte dönüştürücü</h3>
+      <p class="sub">8 biti (1 byte) tek tek açıp kapatarak ondalık karşılığını canlı görün, ya da bir ondalık sayı girip ikili karşılığını üretin.</p>
+      <div class="bit-row" id="bitRow"></div>
+      <div class="binary-result">
+        <div><span class="lbl">İkili (binary)</span><span class="val" id="binOut">00000000</span></div>
+        <div><span class="lbl">Ondalık (decimal)</span><span class="val" id="decOut">0</span></div>
+      </div>
+      <div class="dec-input-row">
+        <input type="number" id="decInput" min="0" max="255" placeholder="0-255">
+        <button id="decSetBtn">İkiliye çevir</button>
+      </div>
+    </div>
+
+    <div class="binary-section">
+      <h3>Mantık kapıları (logic gates)</h3>
+      <p class="sub">Bir kapı seçin, iki girişi (0/1) değiştirin ve çıkışın nasıl belirlendiğini doğruluk tablosunda izleyin.</p>
+      <div class="gate-controls" id="gateControls"></div>
+      <div class="gate-demo">
+        <div class="gate-io">
+          <span class="lbl">GİRİŞ A</span>
+          <button class="bit-toggle" id="gateA">0</button>
+        </div>
+        <div class="gate-io">
+          <span class="lbl">GİRİŞ B</span>
+          <button class="bit-toggle" id="gateB">0</button>
+        </div>
+        <span class="gate-arrow">→</span>
+        <div class="gate-io">
+          <span class="lbl">ÇIKIŞ</span>
+          <div class="bit-toggle" id="gateOut" style="cursor:default;">0</div>
+        </div>
+      </div>
+      <table class="truth-table" id="truthTable"></table>
+    </div>
+  </section>
+
+  <!-- ================= EŞLEŞTİRME ================= -->
+  <section class="panel" id="panel-eslestirme">
+    <div class="match-stats">
+      <span>Deneme: <b id="matchTries">0</b></span>
+      <span>Bulunan: <b id="matchFound">0</b> / 8</span>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="panel" id="panel-quiz">
+    <div id="quizArea">
+      <div class="quiz-top">
+        <span id="quizProgress">Soru 1 / 10</span>
+        <span id="quizScore">Puan: 0</span>
+      </div>
+      <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBar" style="width:10%;"></div></div>
+      <div class="q-card">
+        <h3 id="qText"></h3>
+        <div id="qOptions"></div>
+        <div class="explain" id="qExplain"></div>
+        <button class="next-btn" id="qNext">Sonraki soru →</button>
+      </div>
+    </div>
+    <div class="quiz-done" id="quizDone" style="display:none;">
+      <p class="eyebrow" style="text-align:center;">Sonuç</p>
+      <div class="score" id="finalScore">0 / 10</div>
+      <p id="finalMsg"></p>
+      <button class="restart-btn" id="quizRestart">Baştan başla</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ==================================================================
+   KEŞFET: KONU VERİLERİ
+   ================================================================== */
+const topics = {
+  temel: {
+    label: "Temel Kavramlar",
+    subtopics: [
+      { name:"Donanım ve Yazılım", tag:"Temel", desc:"Donanım, bilgisayarın dokunulabilen fiziksel parçalarıdır (işlemci, bellek, disk). Yazılım ise bu donanıma ne yapması gerektiğini söyleyen komutlar bütünüdür. Donanım olmadan yazılım çalışamaz, yazılım olmadan donanım anlamsız kalır.", fact:"Donanımı ve yazılımı ilk kez birbirinden net bir şekilde ayıran fikir, programların bellekte veri gibi saklanabildiği 'saklı program' kavramına dayanır." },
+      { name:"Veri ve Bilgi", tag:"Temel", desc:"Veri, işlenmemiş ham gerçeklerdir (bir sayı, bir karakter). Bilgi ise verinin işlenip anlamlandırılmış, karar almada kullanılabilir hâlidir. Bir bilgisayar sistemi temelde veriyi bilgiye dönüştürme makinesidir.", fact:"Aynı ham veri, farklı bağlamlarda işlendiğinde tamamen farklı bilgilere dönüşebilir — verinin kendisi değişmez, yorumu değişir." },
+      { name:"Algoritma", tag:"Temel", desc:"Bir problemi çözmek için izlenen, açıkça tanımlanmış ve sonlu adımlar dizisidir. İyi bir algoritma; doğru sonucu üretmeli, sonlu adımda bitmeli ve her adımı belirsizlik içermemelidir.", fact:"Aynı problem için birden fazla doğru algoritma olabilir; performans farkları genelde adım sayısının girdi büyüklüğüyle nasıl arttığından (karmaşıklık) kaynaklanır." },
+    ]
+  },
+  sayisal: {
+    label: "Sayısal Mantık",
+    subtopics: [
+      { name:"Bit ve Byte", tag:"Sayısal Mantık", desc:"Bit, bilgisayarın anlayabildiği en küçük veri birimidir ve yalnızca 0 veya 1 değerini alır. Sekiz bit bir araya gelerek bir byte oluşturur; byte, karakterleri ve sayıları temsil etmek için kullanılan temel yapı taşıdır.", fact:"Bir byte ile 0'dan 255'e kadar (2 üzeri 8 = 256 farklı) değer temsil edilebilir." },
+      { name:"İkili Sayı Sistemi", tag:"Sayısal Mantık", desc:"Günlük hayatta kullandığımız onluk (decimal) sistem 0-9 rakamlarına dayanırken, bilgisayarlar yalnızca iki durumu (elektrik var/yok) ayırt edebildiği için ikili (binary) sistemi kullanır. Her ikili basamağın bir 'ağırlığı' vardır (1, 2, 4, 8, 16...).", fact:"Elektronik devrelerde 'yüksek gerilim' ve 'düşük gerilim' gibi yalnızca iki net durumu ayırt etmek, ara değerleri ayırt etmekten çok daha güvenilir ve ucuzdur — ikili sistemin tercih edilme nedeni budur." },
+      { name:"Mantık Kapıları", tag:"Sayısal Mantık", desc:"AND, OR, NOT gibi mantık kapıları; bir veya iki ikili girişi alıp belirli bir kurala göre tek bir ikili çıkış üreten temel elektronik devrelerdir. Tüm modern işlemciler, milyarlarca bu basit kapının bir araya gelmesiyle inşa edilir.", fact:"Toplama yapan bir devre (adder) bile temelde sadece AND, OR ve XOR kapılarının belirli bir düzende bağlanmasıyla oluşturulur." },
+    ]
+  },
+  mimari: {
+    label: "Sistem Mimarisi",
+    subtopics: [
+      { name:"Von Neumann Mimarisi", tag:"Mimari", desc:"Günümüz bilgisayarlarının çoğunun temelini oluşturan bu mimaride, hem programın komutları hem de işlenecek veri aynı bellekte saklanır. Bu tasarım, bilgisayarların farklı görevler için yeniden kablolanmak yerine yazılım değiştirilerek yeniden programlanabilmesini sağlar.", fact:"Komutların ve verinin aynı bellek yolunu paylaşması, 'Von Neumann darboğazı' adı verilen; bellek erişiminin performansı sınırlayabildiği bilinen bir kısıtlamayı da beraberinde getirir." },
+      { name:"Getir-Çöz-Yürüt Çevrimi", tag:"Mimari", desc:"İşlemcinin her komutu işlemek için tekrarladığı temel döngüdür: komut bellekten getirilir (fetch), ne anlama geldiği çözümlenir (decode) ve gerekli işlem yürütülür (execute). Bu döngü, işlemci çalıştığı sürece durmaksızın tekrarlanır.", fact:"Modern işlemciler bu çevrimin farklı aşamalarını aynı anda farklı komutlar için yürüterek (boru hattı / pipelining) hızı ciddi biçimde artırır." },
+      { name:"Veri Yolu (Bus)", tag:"Mimari", desc:"İşlemci, bellek ve diğer bileşenler arasında veri, adres ve kontrol sinyallerinin taşındığı iletişim hatlarıdır. Veri yolunun genişliği (kaç bitin aynı anda taşınabildiği), sistemin ne kadar veriyi tek seferde aktarabileceğini belirler.", fact:"64 bitlik bir sistem, tek seferde 64 bitlik veri bloklarını işleyip taşıyabilir; bu da adreslenebilir bellek miktarını da doğrudan etkiler." },
+    ]
+  },
+  donanim: {
+    label: "Donanım Bileşenleri",
+    subtopics: [
+      { name:"İşlemci (CPU)", tag:"Donanım", desc:"Komutları yürüten, hesaplamaları yapan ve sistemin genel işleyişini yöneten merkezi birimdir. Aritmetik/mantık birimi (ALU) hesaplamaları yapar, kontrol birimi ise diğer bileşenlere ne zaman ne yapacaklarını söyler.", fact:"CPU'nun hızı yalnızca saat frekansıyla değil, aynı saat döngüsünde kaç komutun tamamlanabildiğiyle (IPC) de belirlenir." },
+      { name:"Bellek (RAM)", tag:"Donanım", desc:"İşlemcinin o anda üzerinde çalıştığı program ve verileri geçici olarak tutan hızlı erişimli bellektir. 'Rastgele erişimli' (random access) olması, herhangi bir hücreye sırayla değil doğrudan erişilebildiği anlamına gelir.", fact:"RAM kapasitesi yetersiz kaldığında sistem, verileri yavaş depolama alanına geçici olarak taşıyarak (sayfalama) çalışmaya devam etmeye çalışır — bu da gözle görülür bir yavaşlamaya yol açar." },
+      { name:"Giriş / Çıkış Birimleri", tag:"Donanım", desc:"Klavye, fare gibi giriş birimleri dış dünyadan bilgisayara veri aktarırken; ekran, yazıcı gibi çıkış birimleri işlenmiş sonucu dış dünyaya iletir. Bu birimler, kullanıcı ile sistemin ikili mantığı arasındaki köprüyü kurar.", fact:"Bir aygıt işlemciye 'işim bitti, ilgilen' sinyali göndermek için kesme (interrupt) mekanizmasını kullanır; bu sayede işlemci sürekli aygıtı sorgulamak zorunda kalmaz." },
+    ]
+  },
+  isletim: {
+    label: "Modern İşletim Sistemleri",
+    subtopics: [
+      { name:"İşletim Sisteminin Görevi", tag:"İşletim Sistemi", desc:"İşletim sistemi, donanım kaynaklarını (işlemci, bellek, depolama) yöneten ve uygulama yazılımlarının bu kaynaklara güvenli ve düzenli biçimde erişmesini sağlayan yazılım katmanıdır. Kullanıcı ile donanım arasında bir aracı görevi görür.", fact:"Bir uygulama doğrudan donanıma erişemez; her istek işletim sistemi üzerinden, tanımlı arayüzler (API) aracılığıyla geçer." },
+      { name:"Süreç Yönetimi", tag:"İşletim Sistemi", desc:"Çalışan her program bir 'süreç' (process) olarak ele alınır. İşletim sistemi, tek bir işlemcide bile birden fazla süreci hızla sırayla çalıştırarak (zaman paylaşımı) kullanıcıya eşzamanlı çalışıyorlarmış izlenimi verir.", fact:"Bir sürecin çok kısa aralıklarla değiştirilmesi (context switching) o kadar hızlı gerçekleşir ki insan gözü bunu fark edemez." },
+      { name:"Dosya Sistemi", tag:"İşletim Sistemi", desc:"Verilerin depolama aygıtlarında adlandırılmış dosyalar ve klasörler hâlinde düzenli biçimde saklanmasını ve bulunmasını sağlayan yapıdır. Hangi verinin diskin hangi fiziksel bölgesinde olduğunu bir 'harita' gibi takip eder.", fact:"Bir dosyayı 'sildiğinizde' veri genelde diskten hemen silinmez — yalnızca o alanın 'kullanılabilir' olarak işaretlenmesi, verinin üzerine yenisi yazılana kadar kurtarılabilir kalmasına yol açabilir." },
+    ]
+  }
+};
+
+const topicRow = document.getElementById('topicRow');
+const subtopicList = document.getElementById('subtopicList');
+const infoCard = document.getElementById('infoCard');
+let currentTopic = null;
+
+function renderTopicRow(){
+  topicRow.innerHTML = '';
+  Object.keys(topics).forEach(key => {
+    const b = document.createElement('button');
+    b.className = 'topic-btn';
+    b.textContent = topics[key].label;
+    b.dataset.key = key;
+    b.addEventListener('click', () => selectTopic(key));
+    topicRow.appendChild(b);
+  });
+}
+function selectTopic(key){
+  currentTopic = key;
+  topicRow.querySelectorAll('.topic-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  renderSubtopicList();
+  selectSubtopic(0);
+}
+function renderSubtopicList(){
+  subtopicList.innerHTML = '';
+  topics[currentTopic].subtopics.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'subtopic-item';
+    b.textContent = s.name;
+    b.dataset.idx = i;
+    b.addEventListener('click', () => selectSubtopic(i));
+    subtopicList.appendChild(b);
+  });
+}
+function selectSubtopic(i){
+  subtopicList.querySelectorAll('.subtopic-item').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  const s = topics[currentTopic].subtopics[i];
+  infoCard.innerHTML = `
+    <p class="info-tag">${s.tag}</p>
+    <h2>${s.name}</h2>
+    <p>${s.desc}</p>
+    <p class="fact">${s.fact}</p>
+  `;
+}
+renderTopicRow();
+selectTopic('temel');
+
+/* ---------------- SEKME GEÇİŞİ ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ==================================================================
+   İKİLİ SİSTEM: BİT/BYTE DÖNÜŞTÜRÜCÜ
+   ================================================================== */
+const weights = [128,64,32,16,8,4,2,1];
+let bits = [0,0,0,0,0,0,0,0];
+
+function renderBitRow(){
+  const row = document.getElementById('bitRow');
+  row.innerHTML = '';
+  weights.forEach((w, i) => {
+    const col = document.createElement('div');
+    col.className = 'bit-col';
+    col.innerHTML = `<span class="bit-weight">${w}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'bit-toggle';
+    btn.textContent = bits[i];
+    btn.addEventListener('click', () => { bits[i] = bits[i] ? 0 : 1; updateBinaryDisplay(); });
+    col.appendChild(btn);
+    row.appendChild(col);
+  });
+}
+function updateBinaryDisplay(){
+  renderBitRow();
+  const binStr = bits.join('');
+  const dec = bits.reduce((sum, b, i) => sum + b*weights[i], 0);
+  document.getElementById('binOut').textContent = binStr;
+  document.getElementById('decOut').textContent = dec;
+}
+document.getElementById('decSetBtn').addEventListener('click', () => {
+  let v = parseInt(document.getElementById('decInput').value, 10);
+  if (isNaN(v)) v = 0;
+  v = Math.max(0, Math.min(255, v));
+  bits = weights.map(w => (v & w) ? 1 : 0);
+  updateBinaryDisplay();
+});
+updateBinaryDisplay();
+
+/* ==================================================================
+   İKİLİ SİSTEM: MANTIK KAPILARI
+   ================================================================== */
+const gates = {
+  AND:  { fn:(a,b)=> a & b, needsB:true },
+  OR:   { fn:(a,b)=> a | b, needsB:true },
+  NOT:  { fn:(a,b)=> a ? 0 : 1, needsB:false },
+  XOR:  { fn:(a,b)=> a ^ b, needsB:true },
+  NAND: { fn:(a,b)=> (a & b) ? 0 : 1, needsB:true },
+  NOR:  { fn:(a,b)=> (a | b) ? 0 : 1, needsB:true }
+};
+let currentGate = 'AND';
+let gateA = 0, gateB = 0;
+
+function renderGateControls(){
+  const wrap = document.getElementById('gateControls');
+  wrap.innerHTML = '';
+  Object.keys(gates).forEach(g => {
+    const b = document.createElement('button');
+    b.className = 'gate-btn' + (g === currentGate ? ' active' : '');
+    b.textContent = g;
+    b.addEventListener('click', () => { currentGate = g; renderGateControls(); updateGate(); });
+    wrap.appendChild(b);
+  });
+}
+function updateGate(){
+  const needsB = gates[currentGate].needsB;
+  document.getElementById('gateB').style.visibility = needsB ? 'visible' : 'hidden';
+  document.getElementById('gateB').previousElementSibling;
+  const out = gates[currentGate].fn(gateA, needsB ? gateB : 0);
+  document.getElementById('gateA').textContent = gateA;
+  document.getElementById('gateA').classList.toggle('on', gateA === 1);
+  document.getElementById('gateB').textContent = gateB;
+  document.getElementById('gateB').classList.toggle('on', gateB === 1);
+  document.getElementById('gateOut').textContent = out;
+  document.getElementById('gateOut').classList.toggle('on', out === 1);
+  renderTruthTable();
+}
+document.getElementById('gateA').addEventListener('click', () => { gateA = gateA ? 0 : 1; updateGate(); });
+document.getElementById('gateB').addEventListener('click', () => { gateB = gateB ? 0 : 1; updateGate(); });
+
+function renderTruthTable(){
+  const needsB = gates[currentGate].needsB;
+  const table = document.getElementById('truthTable');
+  const rows = needsB ? [[0,0],[0,1],[1,0],[1,1]] : [[0],[1]];
+  let html = `<tr><th>A</th>${needsB ? '<th>B</th>' : ''}<th>${currentGate}</th></tr>`;
+  rows.forEach(r => {
+    const a = r[0], b = needsB ? r[1] : 0;
+    const out = gates[currentGate].fn(a, b);
+    const isCurrent = a === gateA && (!needsB || b === gateB);
+    html += `<tr class="${isCurrent ? 'current' : ''}"><td>${a}</td>${needsB ? `<td>${b}</td>` : ''}<td>${out}</td></tr>`;
+  });
+  table.innerHTML = html;
+}
+renderGateControls();
+updateGate();
+
+/* ==================================================================
+   EŞLEŞTİRME OYUNU
+   ================================================================== */
+const pairData = [
+  {term:"Bit", def:"0 veya 1 değeri alan en küçük veri birimi"},
+  {term:"Byte", def:"Sekiz bitten oluşan temel veri birimi"},
+  {term:"Algoritma", def:"Bir problemi çözen, sonlu ve tanımlı adımlar dizisi"},
+  {term:"Von Neumann Mimarisi", def:"Komut ve verinin aynı bellekte saklandığı tasarım"},
+  {term:"Getir-Çöz-Yürüt", def:"İşlemcinin her komut için tekrarladığı temel döngü"},
+  {term:"AND Kapısı", def:"Yalnızca tüm girişler 1 ise çıkışı 1 üreten kapı"},
+  {term:"Süreç (Process)", def:"İşletim sisteminde çalışan bir programın örneği"},
+  {term:"Dosya Sistemi", def:"Verinin disk üzerinde düzenli saklanmasını sağlayan yapı"},
+  {term:"Kesme (Interrupt)", def:"Bir aygıtın işlemciyi anında uyarma sinyali"},
+  {term:"Veri Yolu (Bus)", def:"Bileşenler arasında veri taşıyan iletişim hattı"}
+];
+
+let matchState = { first:null, tries:0, found:0, lock:false };
+
+function buildMatchGrid(){
+  const chosen = [...pairData].sort(() => Math.random()-0.5).slice(0, 8);
+  document.querySelector('.match-stats span:nth-child(2)').innerHTML = `Bulunan: <b id="matchFound">0</b> / ${chosen.length}`;
+
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  let cards = [];
+  chosen.forEach((p,i) => {
+    cards.push({id:'t'+i, label:p.term, pair:i, isTerm:true});
+    cards.push({id:'d'+i, label:p.def, pair:i, isTerm:false});
+  });
+  cards.sort(() => Math.random() - 0.5);
+
+  cards.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.pair = c.pair;
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-front">${c.isTerm ? '⚙' : '?'}</div>
+        <div class="card-face card-back">${c.label}</div>
+      </div>`;
+    el.addEventListener('click', () => onCardClick(el));
+    grid.appendChild(el);
+  });
+  matchState = {first:null, tries:0, found:0, lock:false};
+  document.getElementById('matchTries').textContent = 0;
+}
+function onCardClick(el){
+  if (matchState.lock || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+  el.classList.add('flipped');
+  if (!matchState.first){ matchState.first = el; return; }
+  matchState.lock = true;
+  matchState.tries++;
+  document.getElementById('matchTries').textContent = matchState.tries;
+  const a = matchState.first, b = el;
+  if (a.dataset.pair === b.dataset.pair && a.dataset.id !== b.dataset.id){
+    a.classList.add('matched'); b.classList.add('matched');
+    matchState.found++;
+    document.getElementById('matchFound').textContent = matchState.found;
+    matchState.first = null; matchState.lock = false;
+  } else {
+    a.classList.add('wrong'); b.classList.add('wrong');
+    setTimeout(() => {
+      a.classList.remove('flipped','wrong'); b.classList.remove('flipped','wrong');
+      matchState.first = null; matchState.lock = false;
+    }, 800);
+  }
+}
+buildMatchGrid();
+
+/* ==================================================================
+   QUIZ
+   ================================================================== */
+const quizData = [
+  {q:"Bir byte kaç bitten oluşur?", opts:["4","8","16","32"], correct:1,
+   exp:"Bir byte, sekiz bitin bir araya gelmesiyle oluşur ve 0-255 arasında 256 farklı değeri temsil edebilir."},
+  {q:"Bilgisayarlar neden ikili (binary) sayı sistemini kullanır?", opts:["Daha az yer kapladığı için","Elektronik devrelerin yalnızca iki net durumu güvenilir biçimde ayırt edebilmesi için","İnsanlar için daha kolay olduğundan","Renkli ekranlarla uyumlu olduğu için"], correct:1,
+   exp:"Elektronik devrelerde 'gerilim var / yok' gibi iki net durumu ayırt etmek, ara değerleri ayırt etmekten çok daha güvenilir ve ucuzdur."},
+  {q:"AND mantık kapısı hangi durumda çıkışı 1 üretir?", opts:["En az bir giriş 1 ise","Yalnızca tüm girişler 1 ise","Girişler farklıysa","Her zaman"], correct:1,
+   exp:"AND kapısı, ancak ve ancak tüm girişleri 1 olduğunda çıkışı 1 üretir; aksi hâlde çıkış 0'dır."},
+  {q:"Von Neumann mimarisinin temel özelliği nedir?", opts:["Komut ve verinin farklı bellekte tutulması","Komut ve verinin aynı bellekte saklanması","Yalnızca çıkış birimi kullanılması","Belleğin hiç kullanılmaması"], correct:1,
+   exp:"Bu mimaride hem programın komutları hem de işlenecek veri aynı bellek alanında saklanır; bu da sistemin yeniden programlanabilir olmasını sağlar."},
+  {q:"Getir-Çöz-Yürüt çevriminde 'çöz' (decode) aşamasında ne olur?", opts:["Komut belleğe yazılır","Komutun ne anlama geldiği çözümlenir","Ekran görüntüsü güncellenir","Disk formatlanır"], correct:1,
+   exp:"Getirilen komut, çöz aşamasında hangi işlemi ve hangi verileri kapsadığı belirlenecek şekilde çözümlenir."},
+  {q:"RAM'in 'rastgele erişimli' (random access) olması ne anlama gelir?", opts:["Verinin rastgele silinmesi","Herhangi bir hücreye sırayla değil doğrudan erişilebilmesi","Her açılışta farklı veri içermesi","Yalnızca rastgele sayılar üretmesi"], correct:1,
+   exp:"Rastgele erişim, bellekteki herhangi bir konuma, sırayla ilerlemeye gerek kalmadan doğrudan ulaşılabildiği anlamına gelir."},
+  {q:"Bir aygıtın işlemciyi 'işim bitti' diye uyarmak için kullandığı mekanizma nedir?", opts:["Sayfalama","Kesme (interrupt)","Önbellekleme","Sanallaştırma"], correct:1,
+   exp:"Kesme mekanizması, aygıtların işlemciyi sürekli sorgulanmaya gerek kalmadan gerektiğinde uyarmasını sağlar."},
+  {q:"İşletim sisteminin temel görevlerinden biri hangisidir?", opts:["Donanım kaynaklarını yönetmek","Yalnızca oyun çalıştırmak","İnternet hızını artırmak","Ekran kartını üretmek"], correct:0,
+   exp:"İşletim sistemi; işlemci, bellek ve depolama gibi donanım kaynaklarını yönetip uygulamaların bunlara düzenli erişmesini sağlar."},
+  {q:"Bir süreç (process) çalışırken 'context switching' ne işe yarar?", opts:["Süreci tamamen sonlandırır","Farklı süreçlerin hızla sırayla çalıştırılmasını sağlar","Belleği fiziksel olarak temizler","Yalnızca hata ayıklamada kullanılır"], correct:1,
+   exp:"Context switching, işlemcinin farklı süreçler arasında çok hızlı geçiş yaparak eşzamanlı çalışıyor izlenimi vermesini sağlar."},
+  {q:"Bir dosya 'silindiğinde' genellikle ilk anda ne olur?", opts:["Veri fiziksel olarak diskten anında kalkar","Yalnızca o alan 'kullanılabilir' olarak işaretlenir","Disk otomatik olarak formatlanır","İşletim sistemi çöker"], correct:1,
+   exp:"Silme işlemi genelde veriyi hemen yok etmez; yalnızca o disk alanını yeniden kullanılabilir olarak işaretler."}
+];
+
+let quizIdx = 0, quizScore = 0;
+
+function renderQuiz(){
+  const q = quizData[quizIdx];
+  document.getElementById('quizProgress').textContent = `Soru ${quizIdx+1} / ${quizData.length}`;
+  document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  document.getElementById('quizBar').style.width = ((quizIdx)/quizData.length*100 + 100/quizData.length) + '%';
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qExplain').classList.remove('show');
+  document.getElementById('qExplain').textContent = '';
+  document.getElementById('qNext').classList.remove('show');
+  const optsWrap = document.getElementById('qOptions');
+  optsWrap.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => answerQuiz(i));
+    optsWrap.appendChild(b);
+  });
+}
+function answerQuiz(i){
+  const q = quizData[quizIdx];
+  const buttons = document.querySelectorAll('#qOptions .opt');
+  buttons.forEach(b => b.disabled = true);
+  buttons[q.correct].classList.add('correct');
+  if (i !== q.correct){
+    buttons[i].classList.add('incorrect');
+  } else {
+    quizScore++;
+    document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  }
+  const ex = document.getElementById('qExplain');
+  ex.textContent = q.exp;
+  ex.classList.add('show');
+  document.getElementById('qNext').classList.add('show');
+}
+document.getElementById('qNext').addEventListener('click', () => {
+  quizIdx++;
+  if (quizIdx >= quizData.length){
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('quizDone').style.display = 'block';
+    document.getElementById('finalScore').textContent = `${quizScore} / ${quizData.length}`;
+    let msg = "Harika iş! Bilişim temellerine hakimsin.";
+    if (quizScore <= quizData.length*0.5) msg = "Fena değil — Keşfet ve İkili Sistem sekmelerine tekrar göz atmak faydalı olabilir.";
+    else if (quizScore < quizData.length) msg = "Gayet iyi! Birkaç konuyu tekrar gözden geçirebilirsin.";
+    document.getElementById('finalMsg').textContent = msg;
+  } else {
+    renderQuiz();
+  }
+});
+document.getElementById('quizRestart').addEventListener('click', () => {
+  quizIdx = 0; quizScore = 0;
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('quizDone').style.display = 'none';
+  renderQuiz();
+});
+renderQuiz();
+</script>
+</body>
+</html>

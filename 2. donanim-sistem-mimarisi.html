@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donanım ve Sistem Mimarisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0c1f18;
+    --bg-1:#122a20;
+    --panel:#163325;
+    --panel-2:#1b3c2c;
+    --trace:#2a5940;
+    --copper:#d99a5b;
+    --copper-dim:#8a5f37;
+    --gold:#e8c170;
+    --cyan:#4fd1c5;
+    --cyan-dim:#2c7c73;
+    --ink:#eef3ec;
+    --ink-dim:#a9c2b3;
+    --ink-faint:#6f8c7c;
+    --red:#e2645a;
+    --green:#7bc67e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(79,209,197,0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(217,154,91,0.06), transparent 40%),
+      var(--bg-0);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 64px;}
+
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.14em;
+    color:var(--cyan);text-transform:uppercase;margin:0 0 10px;
+  }
+  h1{font-size:32px;font-weight:800;margin:0 0 8px;letter-spacing:-0.01em;line-height:1.2;}
+  header p{color:var(--ink-dim);font-size:15px;margin:0;max-width:620px;line-height:1.6;}
+
+  nav.tabs{display:flex;gap:6px;margin:28px 0 22px;border-bottom:1px solid var(--trace);flex-wrap:wrap;}
+  nav.tabs button{
+    font-family:'Space Mono',monospace;background:none;border:none;color:var(--ink-faint);
+    font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase;padding:11px 16px;
+    cursor:pointer;border-bottom:2px solid transparent;transition:color .15s, border-color .15s;
+  }
+  nav.tabs button:hover{color:var(--ink-dim);}
+  nav.tabs button.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ---------- KEŞFET TAB ---------- */
+  .topic-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+  .topic-btn{
+    font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:0.03em;
+    background:var(--panel);border:1px solid var(--trace);color:var(--ink-dim);
+    padding:10px 14px;border-radius:8px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+  }
+  .topic-btn:hover{border-color:var(--copper);color:var(--ink);}
+  .topic-btn.active{background:rgba(79,209,197,0.14);border-color:var(--cyan);color:var(--cyan);}
+
+  .explore-area{display:grid;grid-template-columns:220px 1fr;gap:18px;}
+  @media (max-width:700px){ .explore-area{grid-template-columns:1fr;} }
+
+  .subtopic-list{
+    background:var(--panel);border:1px solid var(--trace);border-radius:12px;
+    padding:10px;display:flex;flex-direction:column;gap:4px;height:fit-content;
+  }
+  .subtopic-item{
+    text-align:left;background:none;border:none;color:var(--ink-dim);
+    font-size:13px;padding:10px 12px;border-radius:7px;cursor:pointer;
+    transition:background .15s,color .15s;line-height:1.4;
+  }
+  .subtopic-item:hover{background:var(--panel-2);color:var(--ink);}
+  .subtopic-item.active{background:rgba(217,154,91,0.16);color:var(--copper);}
+
+  .info-card{background:var(--panel);border:1px solid var(--trace);border-radius:14px;padding:22px 24px;min-height:280px;}
+  .info-tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);margin:0 0 6px;}
+  .info-card h2{font-size:21px;margin:0 0 14px;font-weight:800;line-height:1.3;}
+  .info-card p{font-size:14.5px;line-height:1.8;color:var(--ink-dim);margin:0 0 14px;}
+  .info-card .fact{font-size:13px;color:var(--gold);border-left:2px solid var(--gold);padding-left:10px;line-height:1.65;}
+
+  /* ---------- EŞLEŞTİRME TAB ---------- */
+  .match-stats{display:flex;gap:18px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);}
+  .match-stats b{color:var(--gold);}
+  .match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:600px){ .match-grid{grid-template-columns:repeat(2,1fr);} }
+  .card{aspect-ratio:1/0.85;border-radius:10px;cursor:pointer;position:relative;perspective:600px;}
+  .card-inner{position:relative;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d;}
+  .card.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{position:absolute;inset:0;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;backface-visibility:hidden;font-size:12px;line-height:1.4;}
+  .card-front{background:var(--panel-2);border:1px solid var(--trace);color:var(--copper);font-family:'Space Mono',monospace;font-size:18px;}
+  .card-back{background:var(--panel);border:1px solid var(--cyan-dim);color:var(--ink-dim);transform:rotateY(180deg);}
+  .card.matched .card-back{border-color:var(--green);color:var(--ink);}
+  .card.wrong .card-back{border-color:var(--red);}
+  .card.matched{opacity:0.55;cursor:default;}
+
+  /* ---------- QUIZ TAB ---------- */
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--ink-dim);}
+  .quiz-bar{height:4px;background:var(--trace);border-radius:2px;overflow:hidden;margin-bottom:22px;}
+  .quiz-bar-fill{height:100%;background:var(--cyan);transition:width .3s;}
+  .q-card{background:var(--panel);border:1px solid var(--trace);border-radius:14px;padding:24px;}
+  .q-card h3{font-size:17.5px;margin:0 0 18px;font-weight:700;line-height:1.5;}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--trace);color:var(--ink);border-radius:8px;padding:12px 14px;margin-bottom:10px;font-size:14px;font-family:'Manrope',sans-serif;cursor:pointer;transition:border-color .15s,background .15s;}
+  .opt:hover{border-color:var(--copper);}
+  .opt.correct{border-color:var(--green);background:rgba(123,198,126,0.12);color:var(--green);}
+  .opt.incorrect{border-color:var(--red);background:rgba(226,100,90,0.12);color:var(--red);}
+  .opt:disabled{cursor:default;}
+  .explain{margin-top:14px;font-size:13.5px;color:var(--ink-dim);line-height:1.75;border-top:1px solid var(--trace);padding-top:14px;display:none;}
+  .explain.show{display:block;}
+  .next-btn{margin-top:18px;background:var(--cyan-dim);border:none;color:#08201b;font-family:'Space Mono',monospace;font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase;padding:11px 20px;border-radius:8px;cursor:pointer;display:none;}
+  .next-btn.show{display:inline-block;}
+  .quiz-done{text-align:center;padding:40px 20px;}
+  .quiz-done .score{font-family:'Space Mono',monospace;font-size:44px;color:var(--gold);margin:8px 0 6px;}
+  .quiz-done p{color:var(--ink-dim);font-size:14px;}
+  .restart-btn{margin-top:16px;background:none;border:1px solid var(--copper);color:var(--copper);font-family:'Space Mono',monospace;font-size:12.5px;padding:10px 18px;border-radius:8px;cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Bilgisayar donanımı / sistem mimarisi</p>
+    <h1>Donanım ve Sistem Mimarisi</h1>
+    <p>Anakart, işlemci, bellek mimarisi, grafik birimleri, giriş/çıkış arayüzleri ve depolama teknolojilerini konu başlıklarıyla inceleyin, terimleri eşleştirerek pekiştirin, quiz ile kendinizi test edin.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="kesif">Kesif</button>
+    <button class="tab-btn" data-tab="eslestirme">Eslestirme</button>
+    <button class="tab-btn" data-tab="quiz">Quiz</button>
+  </nav>
+
+  <!-- ================= KEŞFET ================= -->
+  <section class="panel active" id="panel-kesif">
+    <div class="topic-row" id="topicRow"></div>
+    <div class="explore-area">
+      <div class="subtopic-list" id="subtopicList"></div>
+      <div class="info-card" id="infoCard">
+        <p style="color:var(--ink-faint);font-size:14px;line-height:1.7;">Bir konu başlığı ve ardından alt konu seçin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EŞLEŞTİRME ================= -->
+  <section class="panel" id="panel-eslestirme">
+    <div class="match-stats">
+      <span>Deneme: <b id="matchTries">0</b></span>
+      <span>Bulunan: <b id="matchFound">0</b> / 8</span>
+    </div>
+    <div class="match-grid" id="matchGrid"></div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="panel" id="panel-quiz">
+    <div id="quizArea">
+      <div class="quiz-top">
+        <span id="quizProgress">Soru 1 / 10</span>
+        <span id="quizScore">Puan: 0</span>
+      </div>
+      <div class="quiz-bar"><div class="quiz-bar-fill" id="quizBar" style="width:10%;"></div></div>
+      <div class="q-card">
+        <h3 id="qText"></h3>
+        <div id="qOptions"></div>
+        <div class="explain" id="qExplain"></div>
+        <button class="next-btn" id="qNext">Sonraki soru →</button>
+      </div>
+    </div>
+    <div class="quiz-done" id="quizDone" style="display:none;">
+      <p class="eyebrow" style="text-align:center;">Sonuç</p>
+      <div class="score" id="finalScore">0 / 10</div>
+      <p id="finalMsg"></p>
+      <button class="restart-btn" id="quizRestart">Baştan başla</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---------------- DATA: KONULAR ---------------- */
+const topics = {
+  anakart: {
+    label: "Anakart",
+    subtopics: [
+      { name:"Yonga Seti (Chipset)", tag:"Anakart", desc:"CPU ile diğer bileşenler (depolama, USB, ağ, ek PCIe yuvaları) arasındaki veri trafiğini yöneten denetleyici devredir. Eski sistemlerdeki kuzey/güney köprü mimarisi, günümüzde çoğunlukla tek bir Platform Controller Hub (PCH) yongasında birleşmiştir.", fact:"Yüksek hızlı bağlantılar (RAM, GPU) günümüzde doğrudan CPU'ya bağlanır; yonga seti daha çok ikincil G/Ç trafiğini yönetir." },
+      { name:"Veri Yolları (Bus Mimarisi)", tag:"Anakart", desc:"Bileşenler arasında veri, adres ve kontrol sinyallerinin taşındığı iletişim hatlarıdır. PCIe gibi seri veri yolları, paralel eski veri yollarının yerini almıştır ve 'lane' adı verilen bağımsız hatlar üzerinden çalışır.", fact:"PCIe 5.0'da tek bir lane, PCIe 3.0'a göre yaklaşık dört kat daha fazla bant genişliği sunar." },
+      { name:"BIOS / UEFI", tag:"Anakart", desc:"Bilgisayar açıldığında donanımı başlatan ve işletim sistemini yükleyen ilk yazılım katmanıdır. UEFI, eski BIOS'un yerini alan; grafik arayüz, güvenli önyükleme (Secure Boot) ve büyük disk desteği sunan modern standarttır.", fact:"UEFI, 2 TB üzerindeki disklerde önyükleme yapabilirken klasik BIOS bu sınırın altında kalır." },
+    ]
+  },
+  islemci: {
+    label: "İşlemci",
+    subtopics: [
+      { name:"Çekirdek ve İş Parçacığı", tag:"CPU", desc:"Çok çekirdekli işlemciler, birden fazla işlemi gerçekten eşzamanlı yürütebilir. Eş zamanlı çoklu iş parçacığı (SMT / Hyper-Threading) teknolojisi ise her fiziksel çekirdeğin iki mantıksal iş parçacığı gibi davranmasını sağlayarak kaynak kullanımını artırır.", fact:"Çekirdek sayısını artırmak her uygulamayı hızlandırmaz — kazanç, yazılımın paralelleştirilebilme derecesine bağlıdır." },
+      { name:"Komut Kümesi Mimarisi (ISA)", tag:"CPU", desc:"İşlemcinin anlayabildiği temel komutlar bütünüdür. x86-64 karmaşık komut kümesi (CISC) yaklaşımını, ARM ve RISC-V ise sadeleştirilmiş komut kümesi (RISC) yaklaşımını benimser; bu seçim güç tüketimi ve performans dengesini doğrudan etkiler.", fact:"ARM mimarisinin enerji verimliliği, mobil cihazların yanı sıra artık sunucu ve dizüstü işlemcilerde de tercih edilmesini sağlıyor." },
+      { name:"Önbellek Hiyerarşisi (L1/L2/L3)", tag:"CPU", desc:"İşlemci ile ana bellek arasındaki hız farkını kapatmak için katmanlı, hızlı ama küçük bellek birimleridir. L1 en hızlı ve en küçük, çekirdeğe özeldir; L3 ise daha büyük ve genelde tüm çekirdekler arasında paylaşılır.", fact:"L1 önbelleğe erişim birkaç saat döngüsü sürerken, ana belleğe erişim yüzlerce döngü gerektirebilir." },
+    ]
+  },
+  bellek: {
+    label: "Bellek Mimarisi",
+    subtopics: [
+      { name:"Bellek Hiyerarşisi", tag:"Bellek", desc:"Kayıtçılardan (register) başlayıp önbellek, RAM ve depolamaya kadar uzanan; yukarı çıktıkça hız artan ama kapasitenin azaldığı katmanlı bir yapıdır. Sistem tasarımı, sık kullanılan verinin mümkün olduğunca üst katmanda tutulmasını hedefler.", fact:"Bu hiyerarşi, 'yerellik ilkesi' (locality of reference) adı verilen; programların kısa sürede aynı verilere tekrar erişme eğilimine dayanır." },
+      { name:"DRAM Türleri (DDR4/DDR5)", tag:"Bellek", desc:"DDR (Double Data Rate) bellekler, saat sinyalinin hem yükselen hem düşen kenarında veri aktararak bant genişliğini ikiye katlar. Her yeni nesil (DDR4 → DDR5) daha yüksek veri hızı ve genelde daha düşük çalışma voltajı sunar.", fact:"DDR5, bellek modülü üzerinde voltaj regülatörünü barındırarak güç yönetimini anakarttan modülün kendisine taşır." },
+      { name:"Sanal Bellek ve Sayfalama", tag:"Bellek", desc:"İşletim sisteminin, fiziksel RAM'den daha büyük bir adres alanı sunmasını sağlayan tekniktir. Az kullanılan bellek sayfaları diske (takas alanına) yazılarak fiziksel RAM daha aktif veriler için boşaltılır.", fact:"Aşırı takas kullanımı (thrashing), sistemin sürekli disk ile RAM arasında veri taşımasına ve ciddi yavaşlamaya yol açabilir." },
+    ]
+  },
+  gpu: {
+    label: "Grafik Birimleri",
+    subtopics: [
+      { name:"Entegre ve Ayrık GPU", tag:"GPU", desc:"Entegre GPU'lar işlemciyle aynı yongada bulunur ve sistem belleğini paylaşır; düşük güç tüketimi sunar ama performansı sınırlıdır. Ayrık GPU'lar ise kendi özel belleğine (VRAM) ve güç kaynağına sahip bağımsız kartlardır.", fact:"Bazı modern sistemler, düşük yükte entegre GPU'yu, ağır grafik işlerinde ayrık GPU'yu otomatik olarak devreye sokar." },
+      { name:"Paralel İşlem Mimarisi", tag:"GPU", desc:"GPU'lar, CPU'nun aksine binlerce basit çekirdeği (CUDA çekirdeği, shader birimi gibi) aynı anda çalıştırarak Tek Komut Çoklu Veri (SIMD) prensibiyle büyük veri kümelerini paralel işler.", fact:"Bu paralel mimari, grafik render etmenin yanı sıra yapay zeka modeli eğitiminde de yaygın biçimde kullanılıyor." },
+      { name:"VRAM ve Bellek Bant Genişliği", tag:"GPU", desc:"VRAM, GPU'ya özel yüksek bant genişlikli bellektir; doku (texture) ve çerçeve verilerini tutar. Bant genişliği, GPU çekirdeklerinin veriyle ne kadar hızlı beslenebildiğini belirlediği için ham çekirdek sayısı kadar önemlidir.", fact:"Yüksek çözünürlüklü oyun ve render işlerinde çoğu zaman darboğaz, çekirdek sayısından çok bellek bant genişliğidir." },
+    ]
+  },
+  giriscikis: {
+    label: "Giriş / Çıkış Arayüzleri",
+    subtopics: [
+      { name:"PCIe (Nesil ve Lane)", tag:"G/Ç", desc:"Genişletme kartlarının (GPU, NVMe SSD, ağ kartı) anakarta bağlandığı yüksek hızlı seri veri yoludur. Her nesil (Gen3, Gen4, Gen5) bant genişliğini yaklaşık iki katına çıkarır; lane sayısı (x4, x8, x16) ise paralel hat sayısını belirler.", fact:"Bir GPU'yu daha az lane sayısına sahip bir yuvaya takmak, özellikle üst düzey kartlarda ölçülebilir performans kaybına yol açabilir." },
+      { name:"USB Nesilleri ve Tip-C", tag:"G/Ç", desc:"USB standardı; 2.0'dan 3.x ve USB4'e kadar her nesilde veri hızını önemli ölçüde artırmıştır. Tip-C konnektörü ise fiziksel bir standarttır ve hem USB hem de Thunderbolt / DisplayPort gibi farklı protokolleri aynı porttan taşıyabilir.", fact:"Bir Tip-C kablosunun görünüşü, içindeki elektronik ve desteklediği hız/protokolü garanti etmez — kablolar arasında ciddi kapasite farkı olabilir." },
+      { name:"Ağ Arayüzleri", tag:"G/Ç", desc:"Ethernet, kablolu ve düşük gecikmeli bağlantı sağlarken Wi-Fi standartları (Wi-Fi 5/6/6E/7) kablosuz bant genişliğini ve eşzamanlı cihaz kapasitesini artırır. Sunucu ve veri merkezlerinde daha yüksek hızlı Ethernet standartları tercih edilir.", fact:"Wi-Fi 6, aynı anda bağlı çok sayıda cihazda bile gecikmeyi düşük tutmak üzere OFDMA teknolojisini kullanır." },
+    ]
+  },
+  depolama: {
+    label: "Depolama Teknolojileri",
+    subtopics: [
+      { name:"HDD: Mekanik Yapı", tag:"Depolama", desc:"Veri, dönen manyetik plakalar üzerine bir okuma/yazma kafası aracılığıyla kaydedilir. Mekanik hareket gerektirdiği için erişim süresi SSD'lere göre çok daha yüksektir, ancak bit başına maliyeti düşüktür.", fact:"HDD'lerin dönüş hızı (ör. 7200 RPM), erişim gecikmesini doğrudan etkileyen temel performans göstergelerinden biridir." },
+      { name:"SSD ve NAND Flash", tag:"Depolama", desc:"Veriler, hareketli parça olmadan yarı iletken NAND flash hücrelerinde elektrik yükü olarak saklanır. Bu yapı, düşük erişim gecikmesi ve yüksek dayanıklılık sağlar, ancak hücrelerin sınırlı bir yazma/silme döngüsü ömrü vardır.", fact:"SSD denetleyicisi, hücrelerin ömrünü dengeli tüketmek için verileri sürekli farklı bloklara dağıtan 'wear leveling' tekniğini kullanır." },
+      { name:"NVMe ve SATA Protokolü", tag:"Depolama", desc:"SATA, sabit disk çağından kalan ve göreli olarak sınırlı bant genişliğine sahip bir arayüzdür. NVMe ise doğrudan PCIe veri yolunu kullanarak çok daha yüksek hız ve çok daha fazla eşzamanlı komut kuyruğu sunar.", fact:"NVMe protokolü binlerce komut kuyruğunu eşzamanlı destekleyebilirken, SATA/AHCI tek bir kuyrukla sınırlıdır." },
+    ]
+  }
+};
+
+/* ---------------- KEŞFET RENDER ---------------- */
+const topicRow = document.getElementById('topicRow');
+const subtopicList = document.getElementById('subtopicList');
+const infoCard = document.getElementById('infoCard');
+let currentTopic = null;
+
+function renderTopicRow(){
+  topicRow.innerHTML = '';
+  Object.keys(topics).forEach(key => {
+    const b = document.createElement('button');
+    b.className = 'topic-btn';
+    b.textContent = topics[key].label;
+    b.dataset.key = key;
+    b.addEventListener('click', () => selectTopic(key));
+    topicRow.appendChild(b);
+  });
+}
+
+function selectTopic(key){
+  currentTopic = key;
+  topicRow.querySelectorAll('.topic-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  renderSubtopicList();
+  selectSubtopic(0);
+}
+
+function renderSubtopicList(){
+  subtopicList.innerHTML = '';
+  topics[currentTopic].subtopics.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'subtopic-item';
+    b.textContent = s.name;
+    b.dataset.idx = i;
+    b.addEventListener('click', () => selectSubtopic(i));
+    subtopicList.appendChild(b);
+  });
+}
+
+function selectSubtopic(i){
+  subtopicList.querySelectorAll('.subtopic-item').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  const s = topics[currentTopic].subtopics[i];
+  infoCard.innerHTML = `
+    <p class="info-tag">${s.tag}</p>
+    <h2>${s.name}</h2>
+    <p>${s.desc}</p>
+    <p class="fact">${s.fact}</p>
+  `;
+}
+
+renderTopicRow();
+selectTopic('anakart');
+
+/* ---------------- SEKME GEÇİŞİ ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------------- EŞLEŞTİRME OYUNU ---------------- */
+const pairData = [
+  {term:"Yonga Seti", def:"CPU dışındaki bileşenlerin veri trafiğini yöneten devre"},
+  {term:"PCIe Lane", def:"Seri veri yolunda paralel çalışan bağımsız iletişim hattı"},
+  {term:"UEFI", def:"Klasik BIOS'un yerini alan modern önyükleme arayüzü"},
+  {term:"SMT", def:"Bir çekirdeğin iki mantıksal iş parçacığı gibi çalışması"},
+  {term:"L1 Önbellek", def:"Çekirdeğe en yakın, en hızlı ve en küçük bellek katmanı"},
+  {term:"DDR5", def:"Voltaj regülatörünü modülün üzerinde barındıran DRAM nesli"},
+  {term:"Sayfalama", def:"Az kullanılan bellek verisinin diske geçici olarak taşınması"},
+  {term:"VRAM", def:"GPU'ya özel, doku ve çerçeve verisini tutan bellek"},
+  {term:"NVMe", def:"SSD'lerin PCIe üzerinden yüksek hızda haberleştiği protokol"},
+  {term:"Wear Leveling", def:"NAND flash hücrelerinin ömrünü dengeli tüketme tekniği"}
+];
+
+let matchState = { first:null, tries:0, found:0, lock:false, total:0 };
+
+function buildMatchGrid(){
+  const chosen = [...pairData].sort(() => Math.random()-0.5).slice(0, 8);
+  matchState.total = chosen.length;
+  document.getElementById('matchFound').nextSibling; // no-op
+  document.querySelector('.match-stats span:nth-child(2)').innerHTML = `Bulunan: <b id="matchFound">0</b> / ${chosen.length}`;
+
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  let cards = [];
+  chosen.forEach((p,i) => {
+    cards.push({id:'t'+i, label:p.term, pair:i, isTerm:true});
+    cards.push({id:'d'+i, label:p.def, pair:i, isTerm:false});
+  });
+  cards.sort(() => Math.random() - 0.5);
+
+  cards.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.pair = c.pair;
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-front">${c.isTerm ? '⚙' : '?'}</div>
+        <div class="card-face card-back">${c.label}</div>
+      </div>`;
+    el.addEventListener('click', () => onCardClick(el));
+    grid.appendChild(el);
+  });
+  matchState.first = null; matchState.tries = 0; matchState.found = 0; matchState.lock = false;
+  document.getElementById('matchTries').textContent = 0;
+}
+
+function onCardClick(el){
+  if (matchState.lock || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+  el.classList.add('flipped');
+
+  if (!matchState.first){ matchState.first = el; return; }
+
+  matchState.lock = true;
+  matchState.tries++;
+  document.getElementById('matchTries').textContent = matchState.tries;
+
+  const a = matchState.first, b = el;
+  if (a.dataset.pair === b.dataset.pair && a.dataset.id !== b.dataset.id){
+    a.classList.add('matched'); b.classList.add('matched');
+    matchState.found++;
+    document.getElementById('matchFound').textContent = matchState.found;
+    matchState.first = null; matchState.lock = false;
+  } else {
+    a.classList.add('wrong'); b.classList.add('wrong');
+    setTimeout(() => {
+      a.classList.remove('flipped','wrong'); b.classList.remove('flipped','wrong');
+      matchState.first = null; matchState.lock = false;
+    }, 800);
+  }
+}
+buildMatchGrid();
+
+/* ---------------- QUIZ ---------------- */
+const quizData = [
+  {q:"Günümüz sistemlerinde yonga setinin (chipset) temel görevi nedir?", opts:["CPU'yu soğutmak","İkincil G/Ç trafiğini yönetmek","VRAM'i çalıştırmak","Ekran çözünürlüğünü ayarlamak"], correct:1,
+   exp:"RAM ve GPU gibi yüksek hızlı bileşenler artık çoğunlukla doğrudan CPU'ya bağlanır; yonga seti depolama, USB ve ağ gibi ikincil G/Ç trafiğini yönetir."},
+  {q:"PCIe'de 'lane' kavramı neyi ifade eder?", opts:["Bir SSD'nin kapasitesini","Veri yolundaki bağımsız bir iletişim hattını","Bellek saat hızını","USB kablosunun uzunluğunu"], correct:1,
+   exp:"Her lane, bağımsız çalışabilen seri bir veri hattıdır; x4, x8, x16 gibi ifadeler kaç lane kullanıldığını belirtir."},
+  {q:"UEFI'nin klasik BIOS'a göre sağladığı önemli avantajlardan biri nedir?", opts:["Daha az elektrik tüketmesi","2 TB üzerindeki disklerde önyükleme yapabilmesi","Sadece metin tabanlı olması","Yalnızca ARM işlemcilerde çalışması"], correct:1,
+   exp:"UEFI, klasik BIOS'un disk boyutu sınırlamasını aşarak büyük disklerde önyüklemeyi ve Secure Boot gibi özellikleri destekler."},
+  {q:"SMT (Eş Zamanlı Çoklu İş Parçacığı) neyi sağlar?", opts:["Fiziksel çekirdek sayısını artırır","Bir fiziksel çekirdeğin iki mantıksal iş parçacığı gibi davranmasını sağlar","GPU performansını artırır","Bellek kapasitesini ikiye katlar"], correct:1,
+   exp:"SMT, fiziksel çekirdek sayısını artırmadan kaynak kullanımını iyileştirerek bir çekirdeğin birden fazla iş parçacığını yönetmesini sağlar."},
+  {q:"Önbellek hiyerarşisinde L1 önbellek diğer katmanlara göre nasıldır?", opts:["En büyük ve en yavaş","En küçük ve en hızlı","Sadece GPU'da bulunur","Sanal bellekle aynı katmandır"], correct:1,
+   exp:"L1, çekirdeğe en yakın katmandır; kapasitesi en küçük ama erişim hızı en yüksektir."},
+  {q:"Sanal bellek / sayfalama mekanizması temel olarak neye dayanır?", opts:["GPU'nun paralel işlem gücüne","Az kullanılan bellek sayfalarının diske taşınmasına","CPU çekirdek sayısının artırılmasına","PCIe lane sayısının çoğaltılmasına"], correct:1,
+   exp:"Sistem, az kullanılan verileri diske (takas alanına) taşıyarak fiziksel RAM'i daha aktif veriler için boşaltır."},
+  {q:"GPU'ların CPU'lardan farklı olarak öne çıktığı temel mimari özellik nedir?", opts:["Çok daha yüksek saat hızı","Binlerce çekirdekle paralel işlem yapabilmesi","Daha büyük L1 önbelleğe sahip olması","Sadece tek bir işlemi aynı anda yürütebilmesi"], correct:1,
+   exp:"GPU'lar, SIMD prensibiyle çok sayıda basit çekirdeği aynı anda çalıştırarak büyük veri kümelerini paralel işler."},
+  {q:"Yüksek çözünürlüklü grafik işlerinde performans darboğazı çoğu zaman nedir?", opts:["CPU çekirdek sayısı","Bellek bant genişliği","USB port sayısı","BIOS sürümü"], correct:1,
+   exp:"GPU çekirdeklerinin veriyle yeterince hızlı beslenebilmesi bellek bant genişliğine bağlıdır; bu genelde ham çekirdek sayısı kadar belirleyicidir."},
+  {q:"NVMe protokolünün SATA/AHCI'ye göre temel avantajı nedir?", opts:["Daha ucuz kablo kullanması","Doğrudan PCIe üzerinden çok daha fazla eşzamanlı komut kuyruğu sunması","Sadece HDD'lerde çalışması","Daha düşük depolama kapasitesi sunması"], correct:1,
+   exp:"NVMe, PCIe veri yolunu kullanarak binlerce eşzamanlı komut kuyruğu destekler; SATA/AHCI ise tek bir kuyrukla sınırlıdır."},
+  {q:"SSD'lerde 'wear leveling' tekniğinin amacı nedir?", opts:["Veri şifrelemek","NAND hücrelerinin ömrünü dengeli biçimde tüketmek","Bellek bant genişliğini artırmak","Soğutmayı iyileştirmek"], correct:1,
+   exp:"SSD denetleyicisi, verileri farklı bloklara dağıtarak tüm NAND hücrelerinin aşınmasını dengeli tutar ve SSD ömrünü uzatır."}
+];
+
+let quizIdx = 0, quizScore = 0;
+
+function renderQuiz(){
+  const q = quizData[quizIdx];
+  document.getElementById('quizProgress').textContent = `Soru ${quizIdx+1} / ${quizData.length}`;
+  document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  document.getElementById('quizBar').style.width = ((quizIdx)/quizData.length*100 + 100/quizData.length) + '%';
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qExplain').classList.remove('show');
+  document.getElementById('qExplain').textContent = '';
+  document.getElementById('qNext').classList.remove('show');
+
+  const optsWrap = document.getElementById('qOptions');
+  optsWrap.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', () => answerQuiz(i));
+    optsWrap.appendChild(b);
+  });
+}
+
+function answerQuiz(i){
+  const q = quizData[quizIdx];
+  const buttons = document.querySelectorAll('#qOptions .opt');
+  buttons.forEach(b => b.disabled = true);
+  buttons[q.correct].classList.add('correct');
+  if (i !== q.correct){
+    buttons[i].classList.add('incorrect');
+  } else {
+    quizScore++;
+    document.getElementById('quizScore').textContent = `Puan: ${quizScore}`;
+  }
+  const ex = document.getElementById('qExplain');
+  ex.textContent = q.exp;
+  ex.classList.add('show');
+  document.getElementById('qNext').classList.add('show');
+}
+
+document.getElementById('qNext').addEventListener('click', () => {
+  quizIdx++;
+  if (quizIdx >= quizData.length){
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('quizDone').style.display = 'block';
+    document.getElementById('finalScore').textContent = `${quizScore} / ${quizData.length}`;
+    let msg = "Harika iş! Sistem mimarisi konusuna hakimsin.";
+    if (quizScore <= quizData.length*0.5) msg = "Fena değil — Keşfet sekmesindeki konu başlıklarına tekrar göz atmak faydalı olabilir.";
+    else if (quizScore < quizData.length) msg = "Gayet iyi! Birkaç alt konuyu tekrar gözden geçirebilirsin.";
+    document.getElementById('finalMsg').textContent = msg;
+  } else {
+    renderQuiz();
+  }
+});
+
+document.getElementById('quizRestart').addEventListener('click', () => {
+  quizIdx = 0; quizScore = 0;
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('quizDone').style.display = 'none';
+  renderQuiz();
+});
+
+renderQuiz();
+</script>
+</body>
+</html>
